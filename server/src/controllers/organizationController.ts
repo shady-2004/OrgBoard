@@ -152,6 +152,17 @@ const getOrganizationById = catchAsync(async (req: Request, res: Response, next:
     });
 });
 
+const getNamesAndIds = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const organizations = await Organization.find({}, 'name _id');
+    res.status(200).json({
+        status: "success",
+        results: organizations.length,
+        data: {
+            organizations
+        }
+    });
+});
+
 
 
 export default {
@@ -159,5 +170,6 @@ export default {
     getAllOrganizations , 
     deleteOrganization,
     updateOrganization,
-    getOrganizationById
+    getOrganizationById,
+    getNamesAndIds
 };

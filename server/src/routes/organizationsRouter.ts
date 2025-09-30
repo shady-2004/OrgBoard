@@ -8,4 +8,5 @@ organizationsRouter.get("/", organizationController.getAllOrganizations);
 organizationsRouter.delete("/:id", organizationController.deleteOrganization);
 organizationsRouter.patch("/:id", organizationController.updateOrganization);
 organizationsRouter.get("/:id", organizationController.getOrganizationById);
+organizationsRouter.get("/names/ids", organizationController.getNamesAndIds);
 export default organizationsRouter;
