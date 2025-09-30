@@ -23,15 +23,39 @@ const createOrganization = catchAsync(async (req: Request, res: Response, next: 
 })
 
 const getAllOrganizations = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const organizations = await Organization.find({},'-__v');
+    // Parse query params with defaults
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    // Total number of organizations
+    const totalOrganizations = await Organization.countDocuments();
+
+    // Fetch organizations with pagination
+    const organizations = await Organization.find({}, '-__v')
+        .skip(skip)
+        .limit(limit);
+
+    const totalPages = Math.ceil(totalOrganizations / limit);
+
+    const pagination = {
+        total: totalOrganizations,
+        page,
+        limit,
+        totalPages,
+        next: page < totalPages ? page + 1 : null,
+        previous: page > 1 ? page - 1 : null,
+    };
+
     res.status(200).json({
         status: "success",
         results: organizations.length,
+        pagination,
         data: {
-            organizations
-        }
+            organizations,
+        },
     });
-})
+});
 
 const deleteOrganization = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;

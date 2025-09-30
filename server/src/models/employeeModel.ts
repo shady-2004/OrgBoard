@@ -1,7 +1,8 @@
 import { Schema, model, Document, Types } from "mongoose";
+import Organization from "./organizationModel";
 
 export interface IEmployee extends Document {
-    _id: Types.ObjectId;            // معرف فريد للعامل
+    _id: Types.ObjectId;            
   name: string;                     // اسم العامل
   residencePermitNumber: string;    // رقم الإقامة (Iqama number)
   residencePermitExpiry: Date;      // تاريخ انتهاء الإقامة
@@ -59,6 +60,14 @@ const employeeSchema = new Schema<IEmployee>(
       type: Schema.Types.ObjectId,
       ref: "Organization",
       required: [true, "Organization reference is required"],
+      validate: {
+        validator: async function (value: Types.ObjectId) {
+          // Check if Organization with this ID exists
+          const orgExists = await Organization.exists({ _id: value });
+          return !!orgExists; // true if exists, false otherwise
+        },
+        message: "Organization with this ID does not exist",
+      },
     },
   },
   { timestamps: true }

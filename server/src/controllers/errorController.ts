@@ -24,7 +24,7 @@ export default (
 
     if (err.isOperational) {
       res.status(err.statusCode).json({
-        status: err.status,
+        status:err.name=='ValidationError' ? 400 : err.status,
         message: err.message,
       });
     } else {
