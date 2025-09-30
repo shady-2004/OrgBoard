@@ -124,16 +124,7 @@ const organizationSchema = new Schema<IOrganization>(
         message: 'Sponsor amount must be a whole number'
       }
     },
-    employees: [{ 
-      type: Schema.Types.ObjectId, 
-      ref: "Employee",
-      validate: {
-        validator: function(employees: Types.ObjectId[]) {
-          return employees.length <= 1000;
-        },
-        message: 'Cannot have more than 1000 employees'
-      }
-    }]
+  
   },
   { 
     timestamps: true,

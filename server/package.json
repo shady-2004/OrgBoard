@@ -21,7 +21,8 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.0.0",
     "mongoose": "^8.18.3",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",
