@@ -83,7 +83,7 @@ const getOrganizationById = catchAsync(async (req: Request, res: Response, next:
         return next(new AppError("No organization found with that ID", 404));
     }
 
-    const employees:IEmployee = await Employee.find({ organization: id }, '-__v -organization') ;
+    const employees:IEmployee[] = await Employee.find({ organization: id }, '-__v -organization').lean();
 
     // Fetch all daily operations for this organization
     const operations = await DailyOperation.find({ organization: id });
