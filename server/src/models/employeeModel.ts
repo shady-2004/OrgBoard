@@ -1,6 +1,7 @@
 import { Schema, model, Document, Types } from "mongoose";
 
 export interface IEmployee extends Document {
+    _id: Types.ObjectId;            // معرف فريد للعامل
   name: string;                     // اسم العامل
   residencePermitNumber: string;    // رقم الإقامة (Iqama number)
   residencePermitExpiry: Date;      // تاريخ انتهاء الإقامة
@@ -53,16 +54,6 @@ const employeeSchema = new Schema<IEmployee>(
       type: Number,
       required: [true, "Requested amount is required"],
       min: [0, "Requested amount cannot be negative"],
-    },
-    revenue: {
-      type: Number,
-      default: 0,
-      min: [0, "Revenue cannot be negative"],
-    },
-    expenses: {
-      type: Number,
-      default: 0,
-      min: [0, "Expenses cannot be negative"],
     },
     organization: {
       type: Schema.Types.ObjectId,

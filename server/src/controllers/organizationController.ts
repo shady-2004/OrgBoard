@@ -3,7 +3,8 @@ import catchAsync from "../utils/catchAsync";
 import { OrganizationInputType, organizationSchemaZod } from "../validations/organization.validation";
 import AppError from "../utils/AppError";
 import Organization from "../models/organizationModel";
-import Employee from "../models/employeeModel";
+import Employee, { IEmployee } from "../models/employeeModel";
+import DailyOperation from "../models/dailyOperationModel";
 
 const createOrganization = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
@@ -69,29 +70,53 @@ const updateOrganization = catchAsync(async (req: Request, res: Response, next: 
     });
 })
 
+
 const getOrganizationById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
+
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid organization ID format", 400));
     }
-    const organization = await Organization.findById(id,'-__v');
 
-    const employees = await Employee.find({ organization: id }, '-__v -organization');
-
-    const totalRequested = employees.reduce((sum, emp) => sum + (emp.requestedAmount || 0), 0);
-    const totalRevenue = employees.reduce((sum, emp) => sum + (emp.revenue || 0), 0);
-    const totalExpenses = employees.reduce((sum, emp) => sum + (emp.expenses || 0), 0);
-    const remainingFromRevenue = totalRevenue - totalExpenses;
-    const totalRemaining = totalRequested - totalRevenue;
-
+    const organization = await Organization.findById(id, '-__v');
     if (!organization) {
         return next(new AppError("No organization found with that ID", 404));
     }
+
+    const employees:IEmployee = await Employee.find({ organization: id }, '-__v -organization') ;
+
+    // Fetch all daily operations for this organization
+    const operations = await DailyOperation.find({ organization: id });
+
+    // Map employee revenue and expenses from operations
+    const employeeFinancials = employees.map(emp => {
+        const empOps = operations.filter(op => op.employee.toString() === emp._id.toString());
+        const totalRevenue = empOps
+            .filter(op => op.category === 'revenue')
+            .reduce((sum, op) => sum + op.amount, 0);
+        const totalExpenses = empOps
+            .filter(op => op.category === 'expense')
+            .reduce((sum, op) => sum + op.amount, 0);
+
+        return {
+            ...emp.toObject(),
+            revenue: totalRevenue,
+            expenses: totalExpenses,
+        };
+    });
+
+    // Calculate organization-level totals
+    const totalRequested = employees.reduce((sum, emp) => sum + (emp.requestedAmount || 0), 0);
+    const totalRevenue = employeeFinancials.reduce((sum, emp) => sum + emp.revenue, 0);
+    const totalExpenses = employeeFinancials.reduce((sum, emp) => sum + emp.expenses, 0);
+    const remainingFromRevenue = totalRevenue - totalExpenses;
+    const totalRemaining = totalRequested - totalRevenue;
+
     res.status(200).json({
         status: "success",
         data: {
             organization,
-            employees,
+            employees: employeeFinancials,
             financialSummary: {
                 totalRequested,
                 totalRevenue,
@@ -101,7 +126,9 @@ const getOrganizationById = catchAsync(async (req: Request, res: Response, next:
             }
         }
     });
-})
+});
+
+
 
 export default {
     createOrganization,
