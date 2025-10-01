@@ -109,5 +109,5 @@ export default {
     createOfficeOperation,
     deleteOfficeOperation,
     updateOfficeOperation,
-    getAllOfficeOperations
+    getAllOfficeOperations,getOfficeOperation
 };
