@@ -107,10 +107,44 @@ const getDailyOperation = catchAsync(async (req: Request, res: Response, next: N
     });
 })
 
+const getAllOrgizationDailyOperations = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+    const skip = (page - 1) * limit;
+
+    const { ID } = req.params;
+    if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
+        return next(new AppError("Invalid organization ID format", 400));
+    }
+    const totalDailyOperations = await DailyOperation.countDocuments({ organization: ID });
+    const dailyOperations = await DailyOperation.find({ organization: ID }).skip(skip).limit(limit).sort({ date: -1 }).populate('employee','+name +Id');
+
+    const totalPages = Math.ceil(totalDailyOperations / limit);
+    const pagination = {
+        total: totalDailyOperations,
+        page,
+        limit,
+        totalPages,
+        next: page < totalPages ? page + 1 : null,
+        previous: page > 1 ? page - 1 : null,
+      };
+
+    res.status(200).json({
+        status: "success",
+        results: dailyOperations.length,
+        pagination,
+        data: {
+            dailyOperations
+        }
+    });
+})
+
 export default {
     createDailyOperation,
     deleteDailyOperation,
     updateDailyOperation,
     getAllDailyOperations,
-    getDailyOperation
+    getDailyOperation , 
+    getAllOrgizationDailyOperations
 }

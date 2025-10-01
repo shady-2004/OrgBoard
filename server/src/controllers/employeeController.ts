@@ -111,7 +111,46 @@ const getEmployee = catchAsync(async (req: Request, res: Response, next: NextFun
         }
     });
 })
+
+const getAllOrgizationEmployees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+    const skip = (page - 1) * limit;
+
+    const { ID } = req.params;
+    if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
+        return next(new AppError("Invalid organization ID format", 400));
+    }
+    const totalEmployees = await Employee.countDocuments({ organization: ID });
+
+    const employees = await Employee.find({ organization: ID }, '-__v')
+        .skip(skip)
+        .limit(limit)
+        .populate('organization', 'name'); // optional
+
+    const totalPages = Math.ceil(totalEmployees / limit);
+
+    const pagination = {
+        total: totalEmployees,
+        page,
+        limit,
+        totalPages,
+        next: page < totalPages ? page + 1 : null,
+        previous: page > 1 ? page - 1 : null,
+    };
+
+    res.status(200).json({
+        status: "success",
+        results: employees.length,
+        pagination,
+        data: {
+            employees,
+        },
+    });
+
+});
   
 
 
-export default { createEmployee , updateEmployee , deleteEmployee,getAllEmployees};
+export default { createEmployee , updateEmployee , deleteEmployee,getAllEmployees,getEmployee,getAllOrgizationEmployees};

@@ -4,6 +4,7 @@ const employeesRouter = Router();
 
 employeesRouter.post("/", employeeController.createEmployee);
 employeesRouter.get("/", employeeController.getAllEmployees);
+employeesRouter.get("/:id", employeeController.getEmployee);
 employeesRouter.delete("/:id", employeeController.deleteEmployee);
 employeesRouter.patch("/:id", employeeController.updateEmployee);
 
