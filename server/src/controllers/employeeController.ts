@@ -125,8 +125,15 @@ const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
   const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
   const skip = (page - 1) * limit;
 
-  const totalEmployees = await Employee.countDocuments();
-  const employees = await Employee.find({}, "-__v")
+  const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+    const filter: any = {
+      };
+      if (nameSearch) {
+        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      }
+
+  const totalEmployees = await Employee.countDocuments(filter);
+  const employees = await Employee.find(filter, "-__v")
     .skip(skip)
     .limit(limit)
     .populate("organization", "name");
@@ -206,9 +213,18 @@ const getAllOrgizationEmployees = catchAsync(
       if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid organization ID format", 400));
       }
+
+
+      const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+      const filter: any = {
+         organization: ID ,
+      };
+      if (nameSearch) {
+        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      }
   
-      const totalEmployees = await Employee.countDocuments({ organization: ID });
-      const employees = await Employee.find({ organization: ID }, "-__v")
+      const totalEmployees = await Employee.countDocuments(filter);
+      const employees = await Employee.find(filter, "-__v")
         .skip(skip)
         .limit(limit)
         .populate("organization", "name");
@@ -223,7 +239,6 @@ const getAllOrgizationEmployees = catchAsync(
         requestedAmounts
       );
   
-      // enrich employees with their totals
       const enrichedEmployees = employees.map((emp) => {
         const totals = totalsMap.get(emp._id.toString()) || {
           totalRevenue: 0,
@@ -237,7 +252,6 @@ const getAllOrgizationEmployees = catchAsync(
         };
       });
   
-      // now compute organization-wide totals
       const orgTotals = enrichedEmployees.reduce(
         (acc, emp) => {
           acc.totalRequested += emp.requestedAmount || 0;
@@ -269,7 +283,7 @@ const getAllOrgizationEmployees = catchAsync(
           next: page < totalPages ? page + 1 : null,
           previous: page > 1 ? page - 1 : null,
         },
-        totals: orgTotals, // ✅ added here
+        totals: orgTotals, 
         data: { employees: enrichedEmployees },
       });
     }
@@ -282,15 +296,19 @@ const getEmployeesWithExpiredResidence = catchAsync(
       const skip = (page - 1) * limit;
   
       const today = new Date();
-  
-      // إجمالي الموظفين اللي اقامتهم منتهية
-      const totalEmployees = await Employee.countDocuments({
+
+      const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+      const filter: any = {
         residencePermitExpiry: { $lte: today },
-      });
+      };
+      if (nameSearch) {
+        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      }
   
-      const employees = await Employee.find({
-        residencePermitExpiry: { $lte: today },
-      })
+  
+      const totalEmployees = await Employee.countDocuments(filter);
+  
+      const employees = await Employee.find(filter)
         .sort({ residencePermitExpiry: -1 }) 
         .skip(skip)
         .limit(limit)
@@ -328,19 +346,24 @@ const getEmployeesExpiringSoon = catchAsync(
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
       const skip = (page - 1) * limit;
+
+    
   
       const today = new Date();
       const thirtyDaysLater = new Date();
       thirtyDaysLater.setDate(today.getDate() + 30);
-  
-      // إجمالي الموظفين اللي هتنتهي اقامتهم خلال 30 يوم
-      const totalEmployees = await Employee.countDocuments({
+
+      const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+      const filter: any = {
         residencePermitExpiry: { $gt: today, $lte: thirtyDaysLater },
-      });
+      };
+      if (nameSearch) {
+        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      }
   
-      const employees = await Employee.find({
-        residencePermitExpiry: { $gt: today, $lte: thirtyDaysLater },
-      })
+      const totalEmployees = await Employee.countDocuments(filter);
+  
+      const employees = await Employee.find(filter)
         .sort({ residencePermitExpiry: 1 })
         .skip(skip)
         .limit(limit)
