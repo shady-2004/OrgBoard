@@ -6,6 +6,7 @@ import Organization from "../models/organizationModel";
 import Employee, { IEmployee } from "../models/employeeModel";
 import DailyOperation from "../models/dailyOperationModel";
 import { Types } from "mongoose";
+import DailyOrganizationOperation from "../models/organizationDailyOperationModel";
 
 const createOrganization = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
@@ -97,66 +98,42 @@ const updateOrganization = catchAsync(async (req: Request, res: Response, next: 
 
 
 const getOrganizationById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-  
-    // ✅ Validate ObjectId format
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return next(new AppError("Invalid organization ID format", 400));
-    }
-  
-    // ✅ Get organization data
-    const organization = await Organization.findById(id, "-__v");
-    if (!organization) {
-      return next(new AppError("No organization found with that ID", 404));
-    }
-  
-    // ✅ Aggregate org-wide financial summary directly in MongoDB
-    const operationsAgg = await DailyOperation.aggregate([
-      { $match: { organization: new Types.ObjectId(id) } },
-      {
-        $group: {
-          _id: "$category",
-          total: { $sum: "$amount" },
-        },
+  const { id } = req.params;
+
+  // ✅ Validate ObjectId format
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid organization ID format", 400));
+  }
+
+  // ✅ Get organization data
+  const organization = await Organization.findById(id, "-__v");
+  if (!organization) {
+    return next(new AppError("No organization found with that ID", 404));
+  }
+
+  const transferredAgg = await DailyOrganizationOperation.aggregate([
+    { $match: { organization: new Types.ObjectId(id) } },
+    {
+      $group: {
+        _id: null,
+        totalTransferredToSponsor: { $sum: "$amount" },
       },
-    ]);
-  
-    const totalRevenue =
-      operationsAgg.find((o) => o._id === "revenue")?.total || 0;
-    const totalExpenses =
-      operationsAgg.find((o) => o._id === "expense")?.total || 0;
-  
-    // ✅ Sum of requested amounts from employees
-    const employeeRequested = await Employee.aggregate([
-      { $match: { organization: new Types.ObjectId(id) } },
-      {
-        $group: {
-          _id: null,
-          totalRequested: { $sum: { $ifNull: ["$requestedAmount", 0] } },
-        },
+    },
+  ]);
+
+  const totalTransferredToSponsor =
+    transferredAgg[0]?.totalTransferredToSponsor || 0;
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      organization:{
+        ...organization.toObject(), transferredToSponsorTotal: totalTransferredToSponsor
       },
-    ]);
-  
-    const totalRequested = employeeRequested[0]?.totalRequested || 0;
-  
-    // ✅ Derived metrics
-    const remainingFromRevenue = totalRevenue - totalExpenses;
-    const totalRemaining = totalRequested - totalRevenue;
-  
-    res.status(200).json({
-      status: "success",
-      data: {
-        organization,
-        financialSummary: {
-          totalRequested,
-          totalRevenue,
-          totalExpenses,
-          remainingFromRevenue,
-          totalRemaining,
-        },
-      },
-    });
+    },
   });
+});
+
   
 
 const getNamesAndIds = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
