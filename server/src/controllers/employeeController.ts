@@ -196,58 +196,85 @@ const getEmployee = catchAsync(async (req: Request, res: Response, next: NextFun
   });
 });
 
-const getAllOrgizationEmployees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const page = Math.max(1, parseInt(req.query.page as string) || 1);
-  const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
-  const skip = (page - 1) * limit;
-
-  const { ID } = req.params;
-  if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
-    return next(new AppError("Invalid organization ID format", 400));
-  }
-
-  const totalEmployees = await Employee.countDocuments({ organization: ID });
-  const employees = await Employee.find({ organization: ID }, "-__v")
-    .skip(skip)
-    .limit(limit)
-    .populate("organization", "name");
-
-  const requestedAmounts: Record<string, number> = {};
-  employees.forEach((emp) => {
-    requestedAmounts[emp._id.toString()] = emp.requestedAmount || 0;
-  });
-
-  const totalsMap = await getEmployeeTotals(
-    employees.map((emp) => emp._id as mongoose.Types.ObjectId),
-    requestedAmounts
+const getAllOrgizationEmployees = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+      const skip = (page - 1) * limit;
+  
+      const { ID } = req.params;
+      if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
+        return next(new AppError("Invalid organization ID format", 400));
+      }
+  
+      const totalEmployees = await Employee.countDocuments({ organization: ID });
+      const employees = await Employee.find({ organization: ID }, "-__v")
+        .skip(skip)
+        .limit(limit)
+        .populate("organization", "name");
+  
+      const requestedAmounts: Record<string, number> = {};
+      employees.forEach((emp) => {
+        requestedAmounts[emp._id.toString()] = emp.requestedAmount || 0;
+      });
+  
+      const totalsMap = await getEmployeeTotals(
+        employees.map((emp) => emp._id as mongoose.Types.ObjectId),
+        requestedAmounts
+      );
+  
+      // enrich employees with their totals
+      const enrichedEmployees = employees.map((emp) => {
+        const totals = totalsMap.get(emp._id.toString()) || {
+          totalRevenue: 0,
+          totalExpenses: 0,
+          revenueRemaining: 0,
+          remaining: emp.requestedAmount || 0,
+        };
+        return {
+          ...emp.toObject(),
+          ...totals,
+        };
+      });
+  
+      // now compute organization-wide totals
+      const orgTotals = enrichedEmployees.reduce(
+        (acc, emp) => {
+          acc.totalRequested += emp.requestedAmount || 0;
+          acc.totalRevenue += emp.totalRevenue || 0;
+          acc.totalExpenses += emp.totalExpenses || 0;
+          acc.totalRevenueRemaining += emp.revenueRemaining || 0;
+          acc.totalRemaining += emp.remaining || 0;
+          return acc;
+        },
+        {
+          totalRequested: 0,
+          totalRevenue: 0,
+          totalExpenses: 0,
+          totalRevenueRemaining: 0,
+          totalRemaining: 0,
+        }
+      );
+  
+      const totalPages = Math.ceil(totalEmployees / limit);
+  
+      res.status(200).json({
+        status: "success",
+        results: employees.length,
+        pagination: {
+          total: totalEmployees,
+          page,
+          limit,
+          totalPages,
+          next: page < totalPages ? page + 1 : null,
+          previous: page > 1 ? page - 1 : null,
+        },
+        totals: orgTotals, // ✅ added here
+        data: { employees: enrichedEmployees },
+      });
+    }
   );
-
-  const enrichedEmployees = employees.map((emp) => ({
-    ...emp.toObject(),
-    ...(totalsMap.get(emp._id.toString()) || {
-      totalRevenue: 0,
-      totalExpenses: 0,
-      revenueRemaining: 0,
-      remaining: emp.requestedAmount || 0,
-    }),
-  }));
-
-  const totalPages = Math.ceil(totalEmployees / limit);
-
-  res.status(200).json({
-    status: "success",
-    results: employees.length,
-    pagination: {
-      total: totalEmployees,
-      page,
-      limit,
-      totalPages,
-      next: page < totalPages ? page + 1 : null,
-      previous: page > 1 ? page - 1 : null,
-    },
-    data: { employees: enrichedEmployees },
-  });
-});
+  
 
 export default {
   createEmployee,
