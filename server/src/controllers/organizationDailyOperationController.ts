@@ -46,7 +46,7 @@ const updateOrgDailyOperation = catchAsync(async (req: Request, res: Response, n
         return next(new AppError(result.error.message, 400));
     }
     const orgDailyOperationData = result.data;
-    const operation = await DailyOrganizationOperation.findByIdAndUpdate(id, orgDailyOperationData, { new: true ,runValidators: true}).populate('organization','+name');
+    const operation = await DailyOrganizationOperation.findByIdAndUpdate(id, orgDailyOperationData, { new: true ,runValidators: true}).populate('organization','+ownerName');
     if (!operation) {
         return next(new AppError("No organization daily operation found with that ID", 404));
     }
@@ -64,7 +64,7 @@ const getAllOrgDailyOperations = catchAsync(async (req: Request, res: Response, 
     const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
   
-    const orgDailyOperations = await DailyOrganizationOperation.find().skip(skip).limit(limit).sort({ date: -1 }).populate('organization','+name');
+    const orgDailyOperations = await DailyOrganizationOperation.find().skip(skip).limit(limit).sort({ date: -1 }).populate('organization','+ownerName');
     const total = await DailyOrganizationOperation.countDocuments();
     const totalPages = Math.ceil(total / limit);
   
