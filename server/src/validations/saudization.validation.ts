@@ -5,7 +5,9 @@ export const saudaizationZodSchema = z.object({
 
   date: z
     .preprocess((val) => (val ? new Date(val as string) : new Date()), z.date())
-    .max(new Date(), "Date cannot be in the future"),
+    .refine((date) => date <= new Date(), {
+      message: "Date cannot be in the future",
+    }),
 
   employeeName: z
     .string()
@@ -13,13 +15,15 @@ export const saudaizationZodSchema = z.object({
     .max(100, "Employee name cannot exceed 100 characters")
     .regex(/^[\p{L}\s.'-]+$/u, "Employee name contains invalid characters"),
 
-  workPermitStatus: z.enum(["pending", "issue_problem", "issued"], {
-    errorMap: () => ({ message: "Work permit status must be pending, issue_problem, or issued" }),
-  }),
+  workPermitStatus: z.enum(["pending", "issue_problem", "issued"]).refine(
+    (val) => ["pending", "issue_problem", "issued"].includes(val),
+    { message: "Work permit status must be pending, issue_problem, or issued" }
+  ),
 
-  deportationStatus: z.enum(["deported", "pending"], {
-    errorMap: () => ({ message: "Deportation status must be deported or pending" }),
-  }),
+  deportationStatus: z.enum(["deported", "pending"]).refine(
+    (val) => ["deported", "pending"].includes(val),
+    { message: "Deportation status must be deported or pending" }
+  ),
 
   deportationDate: z
     .preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional())

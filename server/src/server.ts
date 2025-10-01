@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 import app from "./app";
-
+import connect from "./client/client";
 
 (async () => {
   try {
-
+    await connect();
     const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
     app.listen(PORT, () => {
