@@ -7,5 +7,6 @@ employeesRouter.get("/", employeeController.getAllEmployees);
 employeesRouter.get("/:id", employeeController.getEmployee);
 employeesRouter.delete("/:id", employeeController.deleteEmployee);
 employeesRouter.patch("/:id", employeeController.updateEmployee);
-
+employeesRouter.get("/residence/expired", employeeController.getEmployeesWithExpiredResidence);
+employeesRouter.get("/residence/expiring-soon", employeeController.getEmployeesExpiringSoon);
 export default employeesRouter;

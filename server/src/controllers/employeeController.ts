@@ -273,7 +273,109 @@ const getAllOrgizationEmployees = catchAsync(
         data: { employees: enrichedEmployees },
       });
     }
-  );
+);
+
+const getEmployeesWithExpiredResidence = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+      const skip = (page - 1) * limit;
+  
+      const today = new Date();
+  
+      // إجمالي الموظفين اللي اقامتهم منتهية
+      const totalEmployees = await Employee.countDocuments({
+        residencePermitExpiry: { $lte: today },
+      });
+  
+      const employees = await Employee.find({
+        residencePermitExpiry: { $lte: today },
+      })
+        .sort({ residencePermitExpiry: -1 }) 
+        .skip(skip)
+        .limit(limit)
+        .select("-__v");
+  
+      if (!employees || employees.length === 0) {
+        return next(
+          new AppError("No employees with expired residence permit found", 404)
+        );
+      }
+  
+      const totalPages = Math.ceil(totalEmployees / limit);
+  
+      res.status(200).json({
+        status: "success",
+        results: employees.length,
+        pagination: {
+          total: totalEmployees,
+          page,
+          limit,
+          totalPages,
+          next: page < totalPages ? page + 1 : null,
+          previous: page > 1 ? page - 1 : null,
+        },
+        data: {
+          employees,
+        },
+      });
+    }
+);
+
+
+const getEmployeesExpiringSoon = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+      const skip = (page - 1) * limit;
+  
+      const today = new Date();
+      const thirtyDaysLater = new Date();
+      thirtyDaysLater.setDate(today.getDate() + 30);
+  
+      // إجمالي الموظفين اللي هتنتهي اقامتهم خلال 30 يوم
+      const totalEmployees = await Employee.countDocuments({
+        residencePermitExpiry: { $gt: today, $lte: thirtyDaysLater },
+      });
+  
+      const employees = await Employee.find({
+        residencePermitExpiry: { $gt: today, $lte: thirtyDaysLater },
+      })
+        .sort({ residencePermitExpiry: 1 })
+        .skip(skip)
+        .limit(limit)
+        .select("-__v");
+  
+      if (!employees || employees.length === 0) {
+        return next(
+          new AppError("No employees with residence permit expiring in the next 30 days found", 404)
+        );
+      }
+  
+      const totalPages = Math.ceil(totalEmployees / limit);
+  
+      res.status(200).json({
+        status: "success",
+        results: employees.length,
+        pagination: {
+          total: totalEmployees,
+          page,
+          limit,
+          totalPages,
+          next: page < totalPages ? page + 1 : null,
+          previous: page > 1 ? page - 1 : null,
+        },
+        data: {
+          employees,
+        },
+      });
+    }
+);
+  
+  
+
+
+  
   
 
 export default {
@@ -283,4 +385,6 @@ export default {
   getAllEmployees,
   getEmployee,
   getAllOrgizationEmployees,
+  getEmployeesWithExpiredResidence,
+  getEmployeesExpiringSoon,
 };
