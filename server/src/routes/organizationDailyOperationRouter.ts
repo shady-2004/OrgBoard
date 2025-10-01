@@ -5,5 +5,5 @@ organizationDailyOperationRouter.post('/', organizationDailyOperationController.
 organizationDailyOperationRouter.get('/', organizationDailyOperationController.getAllOrgDailyOperations);
 organizationDailyOperationRouter.delete('/:id', organizationDailyOperationController.deleteOrgDailyOperation);
 organizationDailyOperationRouter.patch('/:id', organizationDailyOperationController.updateOrgDailyOperation);
-organizationDailyOperationRouter.get('/:id', organizationDailyOperationController.getOrgDailyOperation);
+organizationDailyOperationRouter.get('/:id', organizationDailyOperationController.getOrgDailyOperations);
 export default organizationDailyOperationRouter;
