@@ -10,7 +10,7 @@ const createSaudizationRecord = catchAsync(async (req: Request, res: Response, n
         return next(new AppError(result.error.message, 400));
     }
     const saudizationData = result.data;
-    const saudization = await Saudaization.create(saudizationData);
+    const saudization = (await Saudaization.create(saudizationData)).populate('organization', '+ownerName');
     res.status(201).json({
         status: "success",
         data: {
@@ -43,7 +43,7 @@ const updateSaudizationRecord = catchAsync(async (req: Request, res: Response, n
         return next(new AppError(result.error.message, 400));
     }
     const saudizationData = result.data;
-    const saudization = await Saudaization.findByIdAndUpdate(id, saudizationData, { new: true, runValidators: true });
+    const saudization = await Saudaization.findByIdAndUpdate(id, saudizationData, { new: true, runValidators: true }).populate('organization', '+ownerName');
     if (!saudization) {
         return next(new AppError("No saudization found with that ID", 404));
     }
@@ -59,7 +59,7 @@ const getSaudizationRecord = catchAsync(async (req: Request, res: Response, next
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid saudization ID format", 400));
     }
-    const saudization = await Saudaization.findById(id);
+    const saudization = await Saudaization.findById(id).populate('organization', '+ownerName');
     if (!saudization) {
         return next(new AppError("No saudization found with that ID", 404));
     }
@@ -72,29 +72,44 @@ const getSaudizationRecord = catchAsync(async (req: Request, res: Response, next
 });
 const getAllSaudizationsRecords = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // Pagination
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
-    const total = await Saudaization.countDocuments();
-    const saudizations = await Saudaization.find().skip(skip).limit(limit).sort({ date: -1 });
+  
+    const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+    const filter: any = {};
+    if (nameSearch) {
+      filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+    }
+  
+    const total = await Saudaization.countDocuments(filter);
+  
+    const saudizations = await Saudaization.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ date: -1 });
+  
     const totalPages = Math.ceil(total / limit);
+  
     const pagination = {
-        total,
-        page,
-        limit,
-        totalPages,
-        next: page < totalPages ? page + 1 : null,
-        previous: page > 1 ? page - 1 : null,
+      total,
+      page,
+      limit,
+      totalPages,
+      next: page < totalPages ? page + 1 : null,
+      previous: page > 1 ? page - 1 : null,
     };
+  
     res.status(200).json({
-        status: "success",
-        results: saudizations.length,
-        pagination,
-        data: {
-            saudizations
-        }
+      status: "success",
+      results: saudizations.length,
+      pagination,
+      data: {
+        saudizations,
+      },
     });
-});
+  });
+  
 export default {
     createSaudizationRecord,
     deleteSaudizationRecord,
