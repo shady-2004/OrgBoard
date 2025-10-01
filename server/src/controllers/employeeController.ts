@@ -1,156 +1,259 @@
 import { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
 import { EmployeeInputType, employeeSchemaZod } from "../validations/employee.validation";
 import AppError from "../utils/AppError";
 import Employee from "../models/employeeModel";
+import DailyOperation from "../models/dailyOperationModel";
 import catchAsync from "../utils/catchAsync";
 
-const createEmployee = catchAsync (async (req: Request, res: Response,next : NextFunction) => {
-    const body = req.body;
-    // Validate request body using Zod schema
-    const result = employeeSchemaZod.safeParse(body);
-    if (!result.success) {
-        return next(new AppError(result.error.message, 400));
-    }
-    const employeeData = result.data;
-    
-    const employee  = await (await Employee.create(employeeData)).populate('organization','+name');
-    res.status(201).json({
-        status: "success",
-        data: {
-            employee
-        }
+// 🔹 Helper: calculate totals for employees
+const getEmployeeTotals = async (
+  employeeIds: mongoose.Types.ObjectId[],
+  requestedAmounts?: Record<string, number>
+) => {
+  const totals = await DailyOperation.aggregate([
+    { $match: { employee: { $in: employeeIds } } },
+    {
+      $group: {
+        _id: "$employee",
+        totalRevenue: {
+          $sum: { $cond: [{ $eq: ["$category", "revenue"] }, "$amount", 0] },
+        },
+        totalExpenses: {
+          $sum: { $cond: [{ $eq: ["$category", "expense"] }, "$amount", 0] },
+        },
+      },
+    },
+  ]);
+
+  const map = new Map();
+  totals.forEach((t) => {
+    const requested = requestedAmounts?.[t._id.toString()] || 0;
+    map.set(t._id.toString(), {
+      totalRevenue: t.totalRevenue,
+      totalExpenses: t.totalExpenses,
+      revenueRemaining: t.totalRevenue - t.totalExpenses,
+      remaining: requested - t.totalRevenue,
     });
+  });
+
+  return map;
+};
+
+const createEmployee = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const result = employeeSchemaZod.safeParse(req.body);
+  if (!result.success) {
+    return next(new AppError(result.error.message, 400));
+  }
+
+  const employeeData = result.data;
+  const employee = await (await Employee.create(employeeData)).populate("organization", "+name");
+
+  // Totals
+  const requestedAmount = employee.requestedAmount || 0;
+  const totalsMap = await getEmployeeTotals([employee._id as mongoose.Types.ObjectId], {
+    [employee._id.toString()]: requestedAmount,
+  });
+  const totals = totalsMap.get(employee._id.toString()) || {
+    totalRevenue: 0,
+    totalExpenses: 0,
+    revenueRemaining: 0,
+    remaining: requestedAmount,
+  };
+
+  res.status(201).json({
+    status: "success",
+    data: { employee: { ...employee.toObject(), ...totals } },
+  });
 });
 
-const updateEmployee =catchAsync( async (req: Request, res: Response,next : NextFunction) => {
-    const { id } = req.params;
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-        return next(new AppError("Invalid employee ID format", 400));
-    }
-    const body = req.body;
-    // Validate request body using Zod schema
-    const result = employeeSchemaZod.safeParse(body);
-    if (!result.success) {
-        return next(new AppError(result.error.message, 400));
-    }
-    const employeeData:EmployeeInputType = result.data;
-    const employee = await Employee.findByIdAndUpdate(id, employeeData, { new: true, runValidators: true }).populate('organization','+name');
-    if (!employee) {
-        return next(new AppError("No employee found with that ID", 404));
-    }
-    res.status(200).json({
-        status: "success",
-        data: {
-            employee
-        }
-    });
+const updateEmployee = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid employee ID format", 400));
+  }
+
+  const result = employeeSchemaZod.safeParse(req.body);
+  if (!result.success) {
+    return next(new AppError(result.error.message, 400));
+  }
+
+  const employeeData: EmployeeInputType = result.data;
+  const employee = await Employee.findByIdAndUpdate(id, employeeData, {
+    new: true,
+    runValidators: true,
+  }).populate("organization", "+name");
+
+  if (!employee) {
+    return next(new AppError("No employee found with that ID", 404));
+  }
+
+  // Totals
+  const requestedAmount = employee.requestedAmount || 0;
+  const totalsMap = await getEmployeeTotals([employee._id as mongoose.Types.ObjectId], {
+    [employee._id.toString()]: requestedAmount,
+  });
+  const totals = totalsMap.get(employee._id.toString()) || {
+    totalRevenue: 0,
+    totalExpenses: 0,
+    revenueRemaining: 0,
+    remaining: requestedAmount,
+  };
+
+  res.status(200).json({
+    status: "success",
+    data: { employee: { ...employee.toObject(), ...totals } },
+  });
 });
 
 const deleteEmployee = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-        return next(new AppError("Invalid employee ID format", 400));
-    }
-    const employee = await Employee.findByIdAndDelete(id);
-    if (!employee) {
-        return next(new AppError("No employee found with that ID", 404));
-    }
-    res.status(204).json({
-        status: "success",
-        data: null
-    });
+  const { id } = req.params;
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid employee ID format", 400));
+  }
+
+  const employee = await Employee.findByIdAndDelete(id);
+  if (!employee) {
+    return next(new AppError("No employee found with that ID", 404));
+  }
+
+  res.status(204).json({ status: "success", data: null });
 });
-const getAllEmployees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
-    const skip = (page - 1) * limit;
-  
-    // Total employees
-    const totalEmployees = await Employee.countDocuments();
-  
-    // Fetch employees with pagination
-    const employees = await Employee.find({}, '-__v')
-      .skip(skip)
-      .limit(limit)
-      .populate('organization', 'name'); // optional
-  
-    const totalPages = Math.ceil(totalEmployees / limit);
-  
-    const pagination = {
+
+const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+  const skip = (page - 1) * limit;
+
+  const totalEmployees = await Employee.countDocuments();
+  const employees = await Employee.find({}, "-__v")
+    .skip(skip)
+    .limit(limit)
+    .populate("organization", "name");
+
+  const requestedAmounts: Record<string, number> = {};
+  employees.forEach((emp) => {
+    requestedAmounts[emp._id.toString()] = emp.requestedAmount || 0;
+  });
+
+  const totalsMap = await getEmployeeTotals(
+    employees.map((emp) => emp._id as mongoose.Types.ObjectId),
+    requestedAmounts
+  );
+
+  const enrichedEmployees = employees.map((emp) => ({
+    ...emp.toObject(),
+    ...(totalsMap.get(emp._id.toString()) || {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      revenueRemaining: 0,
+      remaining: emp.requestedAmount || 0,
+    }),
+  }));
+
+  const totalPages = Math.ceil(totalEmployees / limit);
+
+  res.status(200).json({
+    status: "success",
+    results: employees.length,
+    pagination: {
       total: totalEmployees,
       page,
       limit,
       totalPages,
       next: page < totalPages ? page + 1 : null,
       previous: page > 1 ? page - 1 : null,
-    };
-  
-    res.status(200).json({
-      status: "success",
-      results: employees.length,
-      pagination,
-      data: {
-        employees,
-      },
-    });
+    },
+    data: { employees: enrichedEmployees },
   });
+});
 
 const getEmployee = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-        return next(new AppError("Invalid employee ID format", 400));
-    }
-    const employee = await Employee.findById(id).populate('organization','+name');
-    if (!employee) {
-        return next(new AppError("No employee found with that ID", 404));
-    }
-    res.status(200).json({
-        status: "success",
-        data: {
-            employee
-        }
-    });
-})
+  const { id } = req.params;
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid employee ID format", 400));
+  }
+
+  const employee = await Employee.findById(id).populate("organization", "+name");
+  if (!employee) {
+    return next(new AppError("No employee found with that ID", 404));
+  }
+
+  const requestedAmount = employee.requestedAmount || 0;
+  const totalsMap = await getEmployeeTotals([employee._id as mongoose.Types.ObjectId], {
+    [employee._id.toString()]: requestedAmount,
+  });
+  const totals = totalsMap.get(employee._id.toString()) || {
+    totalRevenue: 0,
+    totalExpenses: 0,
+    revenueRemaining: 0,
+    remaining: requestedAmount,
+  };
+
+  res.status(200).json({
+    status: "success",
+    data: { employee: { ...employee.toObject(), ...totals } },
+  });
+});
 
 const getAllOrgizationEmployees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+  const skip = (page - 1) * limit;
 
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
-    const skip = (page - 1) * limit;
+  const { ID } = req.params;
+  if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid organization ID format", 400));
+  }
 
-    const { ID } = req.params;
-    if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
-        return next(new AppError("Invalid organization ID format", 400));
-    }
-    const totalEmployees = await Employee.countDocuments({ organization: ID });
+  const totalEmployees = await Employee.countDocuments({ organization: ID });
+  const employees = await Employee.find({ organization: ID }, "-__v")
+    .skip(skip)
+    .limit(limit)
+    .populate("organization", "name");
 
-    const employees = await Employee.find({ organization: ID }, '-__v')
-        .skip(skip)
-        .limit(limit)
-        .populate('organization', 'name'); // optional
+  const requestedAmounts: Record<string, number> = {};
+  employees.forEach((emp) => {
+    requestedAmounts[emp._id.toString()] = emp.requestedAmount || 0;
+  });
 
-    const totalPages = Math.ceil(totalEmployees / limit);
+  const totalsMap = await getEmployeeTotals(
+    employees.map((emp) => emp._id as mongoose.Types.ObjectId),
+    requestedAmounts
+  );
 
-    const pagination = {
-        total: totalEmployees,
-        page,
-        limit,
-        totalPages,
-        next: page < totalPages ? page + 1 : null,
-        previous: page > 1 ? page - 1 : null,
-    };
+  const enrichedEmployees = employees.map((emp) => ({
+    ...emp.toObject(),
+    ...(totalsMap.get(emp._id.toString()) || {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      revenueRemaining: 0,
+      remaining: emp.requestedAmount || 0,
+    }),
+  }));
 
-    res.status(200).json({
-        status: "success",
-        results: employees.length,
-        pagination,
-        data: {
-            employees,
-        },
-    });
+  const totalPages = Math.ceil(totalEmployees / limit);
 
+  res.status(200).json({
+    status: "success",
+    results: employees.length,
+    pagination: {
+      total: totalEmployees,
+      page,
+      limit,
+      totalPages,
+      next: page < totalPages ? page + 1 : null,
+      previous: page > 1 ? page - 1 : null,
+    },
+    data: { employees: enrichedEmployees },
+  });
 });
-  
 
-
-export default { createEmployee , updateEmployee , deleteEmployee,getAllEmployees,getEmployee,getAllOrgizationEmployees};
+export default {
+  createEmployee,
+  updateEmployee,
+  deleteEmployee,
+  getAllEmployees,
+  getEmployee,
+  getAllOrgizationEmployees,
+};

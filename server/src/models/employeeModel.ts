@@ -69,23 +69,15 @@ const employeeSchema = new Schema<IEmployee>(
         message: "Organization with this ID does not exist",
       },
     },
+    
   },
   { timestamps: true }
 );
 
-employeeSchema.virtual("remainingRevenue").get(function () {
-  if (this.revenue == null) return null;
-  return this.revenue - (this.expenses || 0);
-});
 
-employeeSchema.virtual("remainingRequested").get(function () {
-  if (this.revenue == null) return null;
-  return this.requestedAmount - this.revenue;
-});
 
-// Ensure virtuals appear in JSON response
-employeeSchema.set("toJSON", { virtuals: true });
-employeeSchema.set("toObject", { virtuals: true });
+
+
 
 const Employee = model<IEmployee>("Employee", employeeSchema);
 

@@ -33,6 +33,10 @@ const dailyOrganizationOperationSchema = new Schema<IDailyOrganizationOperation>
   { timestamps: true }
 );
 
+
+
+
+
 const DailyOrganizationOperation = model<IDailyOrganizationOperation>(
   'DailyOrganizationOperation',
   dailyOrganizationOperationSchema

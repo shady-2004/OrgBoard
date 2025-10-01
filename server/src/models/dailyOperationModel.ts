@@ -66,6 +66,10 @@ const dailyOperationSchema = new Schema<IDailyOperation>(
   { timestamps: true }
 );
 
+
+
+
+
 const DailyOperation = model<IDailyOperation>('DailyOperation', dailyOperationSchema);
 
 export default DailyOperation;
