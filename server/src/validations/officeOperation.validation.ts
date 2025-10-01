@@ -14,13 +14,11 @@ export const officeOperationSchemaZod = z.object({
     .min(0, "Amount cannot be negative"),
 
   type: z.enum(["expense", "revenue"], {
-    errorMap: () => ({ message: 'Type must be either "expense" or "revenue"' }),
+    error: 'Type must be either "expense" or "revenue"',
   }),
 
   paymentMethod: z.enum(["cash", "bank", "credit", "other"], {
-    errorMap: () => ({
-      message: "Payment method must be one of: cash, bank, credit, other",
-    }),
+    error: "Payment method must be one of: cash, bank, credit, other",
   }),
 
   notes: z

@@ -61,8 +61,8 @@ const deleteEmployee = catchAsync(async (req: Request, res: Response, next: Next
     });
 });
 const getAllEmployees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
   
     // Total employees
@@ -94,6 +94,23 @@ const getAllEmployees = catchAsync(async (req: Request, res: Response, next: Nex
       },
     });
   });
+
+const getEmployee = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        return next(new AppError("Invalid employee ID format", 400));
+    }
+    const employee = await Employee.findById(id).populate('organization','+name');
+    if (!employee) {
+        return next(new AppError("No employee found with that ID", 404));
+    }
+    res.status(200).json({
+        status: "success",
+        data: {
+            employee
+        }
+    });
+})
   
 
 
