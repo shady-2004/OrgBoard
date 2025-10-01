@@ -125,11 +125,14 @@ const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
   const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
   const skip = (page - 1) * limit;
 
-  const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+  const search = req.query.search ? String(req.query.search).trim() : null;
     const filter: any = {
       };
-      if (nameSearch) {
-        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      if (search) {
+        filter.$or = [
+          {name: { $regex: search, $options: "i" } },
+          {residencePermitNumber: { $regex: search, $options: "i" } }
+        ] 
       }
 
   const totalEmployees = await Employee.countDocuments(filter);
@@ -215,12 +218,15 @@ const getAllOrgizationEmployees = catchAsync(
       }
 
 
-      const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+      const search = req.query.search ? String(req.query.search).trim() : null;
       const filter: any = {
          organization: ID ,
       };
-      if (nameSearch) {
-        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      if (search) {
+        filter.$or = [
+          {name: { $regex: search, $options: "i" } },
+          {residencePermitNumber: { $regex: search, $options: "i" } }
+        ] 
       }
   
       const totalEmployees = await Employee.countDocuments(filter);
@@ -297,12 +303,15 @@ const getEmployeesWithExpiredResidence = catchAsync(
   
       const today = new Date();
 
-      const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+      const search = req.query.search ? String(req.query.search).trim() : null;
       const filter: any = {
         residencePermitExpiry: { $lte: today },
       };
-      if (nameSearch) {
-        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      if (search) {
+        filter.$or = [
+          {name: { $regex: search, $options: "i" } },
+          {residencePermitNumber: { $regex: search, $options: "i" } }
+        ] 
       }
   
   
@@ -353,12 +362,15 @@ const getEmployeesExpiringSoon = catchAsync(
       const thirtyDaysLater = new Date();
       thirtyDaysLater.setDate(today.getDate() + 30);
 
-      const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+      const search = req.query.search ? String(req.query.search).trim() : null;
       const filter: any = {
         residencePermitExpiry: { $gt: today, $lte: thirtyDaysLater },
       };
-      if (nameSearch) {
-        filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      if (search) {
+        filter.$or = [
+          {name: { $regex: search, $options: "i" } },
+          {residencePermitNumber: { $regex: search, $options: "i" } }
+        ] 
       }
   
       const totalEmployees = await Employee.countDocuments(filter);

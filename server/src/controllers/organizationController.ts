@@ -30,11 +30,18 @@ const getAllOrganizations = catchAsync(async (req: Request, res: Response, next:
     const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
 
+    const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+    const filter: any = {
+      };
+      if (nameSearch) {
+        filter.ownerName = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      }
+
     // Total number of organizations
-    const totalOrganizations = await Organization.countDocuments();
+    const totalOrganizations = await Organization.countDocuments(filter);
 
     // Fetch organizations with pagination
-    const organizations = await Organization.find({}, '-__v')
+    const organizations = await Organization.find(filter, '-__v')
         .skip(skip)
         .limit(limit);
 

@@ -68,8 +68,6 @@ const dailyOperationSchema = new Schema<IDailyOperation>(
 
 
 
-
-
 const DailyOperation = model<IDailyOperation>('DailyOperation', dailyOperationSchema);
 
 export default DailyOperation;
