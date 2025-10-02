@@ -15,7 +15,7 @@ const createOrganization = catchAsync(async (req: Request, res: Response, next: 
         return next(new AppError(result.error.message, 400));
     }
     const organizationData:OrganizationInputType = result.data;
-    const organization = Organization.create(organizationData);
+    const organization = await Organization.create(organizationData);
     res.status(201).json({
         status: "success",
         data: {
@@ -34,7 +34,7 @@ const getAllOrganizations = catchAsync(async (req: Request, res: Response, next:
     const filter: any = {
       };
       if (nameSearch) {
-        filter.ownerName = { $regex: nameSearch, $options: "i" }; // case-insensitive
+       filter.ownerName = { $regex: `\\b${nameSearch}\\b`, $options: "i" };
       }
 
     // Total number of organizations
