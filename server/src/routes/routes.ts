@@ -15,7 +15,7 @@ router.use('/users',userRouter)
 router.use('/organizations', organizationsRouter);
 router.use('/employees', employeesRouter);
 router.use('/daily-operations', dailyOperationsRouter);
-router.use('organizationDailyOperations', organizationDailyOperationRouter);
+router.use('/organization-daily-operations', organizationDailyOperationRouter);
 router.use('/office-operations', officeOperationsRouter);
 router.use('/saudization', saudizationRouter);
 router.use('/settings', settingsRouter);

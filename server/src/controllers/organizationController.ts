@@ -25,46 +25,69 @@ const createOrganization = catchAsync(async (req: Request, res: Response, next: 
 })
 
 const getAllOrganizations = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // Parse query params with defaults
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
-    const skip = (page - 1) * limit;
+  // Pagination
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+  const skip = (page - 1) * limit;
 
-    const nameSearch = req.query.name ? String(req.query.name).trim() : null;
-    const filter: any = {
-      };
-      if (nameSearch) {
-       filter.ownerName = { $regex: `\\b${nameSearch}\\b`, $options: "i" };
-      }
+  // Filtering
+  const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+  const filter: any = {};
+  if (nameSearch) {
+    filter.ownerName = { $regex: `\\b${nameSearch}\\b`, $options: "i" };
+  }
 
-    // Total number of organizations
-    const totalOrganizations = await Organization.countDocuments(filter);
+  // Count total orgs
+  const totalOrganizations = await Organization.countDocuments(filter);
 
-    // Fetch organizations with pagination
-    const organizations = await Organization.find(filter, '-__v')
-        .skip(skip)
-        .limit(limit);
+  // Aggregation: fetch orgs + join with DailyOrganizationOperation + sum amounts
+  const organizations = await Organization.aggregate([
+    { $match: filter },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: "dailyorganizationoperations", // collection name in MongoDB
+        localField: "_id",
+        foreignField: "organization",
+        as: "operations",
+      },
+    },
+    {
+      $addFields: {
+        transferredToSponsorTotal: { $sum: "$operations.amount" },
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        operations: 0, // hide operations array, keep only the total
+        
+      },
+    },
+  ]);
 
-    const totalPages = Math.ceil(totalOrganizations / limit);
+  // Pagination object
+  const totalPages = Math.ceil(totalOrganizations / limit);
+  const pagination = {
+    total: totalOrganizations,
+    page,
+    limit,
+    totalPages,
+    next: page < totalPages ? page + 1 : null,
+    previous: page > 1 ? page - 1 : null,
+  };
 
-    const pagination = {
-        total: totalOrganizations,
-        page,
-        limit,
-        totalPages,
-        next: page < totalPages ? page + 1 : null,
-        previous: page > 1 ? page - 1 : null,
-    };
-
-    res.status(200).json({
-        status: "success",
-        results: organizations.length,
-        pagination,
-        data: {
-            organizations,
-        },
-    });
+  res.status(200).json({
+    status: "success",
+    results: organizations.length,
+    pagination,
+    data: {
+      organizations,
+    },
+  });
 });
+
 
 const deleteOrganization = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;

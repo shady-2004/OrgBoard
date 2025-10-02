@@ -42,7 +42,8 @@ const updateOfficeOperation =catchAsync( async (req: Request, res: Response,next
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid office operation ID format", 400));
     }
-    const result = officeOperationSchemaZod.safeParse(body);
+    const updateOfficeOperationSchemaZod = officeOperationSchemaZod.partial();
+    const result = updateOfficeOperationSchemaZod.safeParse(body);
     if (!result.success) {
         return next(new AppError(result.error.message, 400));
     }
