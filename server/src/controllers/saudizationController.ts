@@ -3,14 +3,26 @@ import catchAsync from "../utils/catchAsync";
 import AppError from "../utils/AppError";
 import { saudaizationZodSchema } from "../validations/saudization.validation";
 import Saudaization from "../models/saudizationModel";
+import Organization from "../models/organizationModel";
 const createSaudizationRecord = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
+
     const result = saudaizationZodSchema.safeParse(body);
     if (!result.success) {
         return next(new AppError(result.error.message, 400));
     }
+
     const saudizationData = result.data;
-    const saudization = (await Saudaization.create(saudizationData)).populate('organization', '+ownerName');
+
+    const organizationExists = await Organization.findById(saudizationData.organization).select("_id ownerName");
+    if (!organizationExists) {
+        return next(new AppError("Organization not found", 404));
+    }
+
+    const saudization = await Saudaization.create(saudizationData);
+
+    await saudization.populate("organization", "ownerName");
+
     res.status(201).json({
         status: "success",
         data: {
@@ -18,6 +30,7 @@ const createSaudizationRecord = catchAsync(async (req: Request, res: Response, n
         }
     });
 });
+
 const deleteSaudizationRecord = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -38,12 +51,20 @@ const updateSaudizationRecord = catchAsync(async (req: Request, res: Response, n
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid saudization ID format", 400));
     }
-    const result = saudaizationZodSchema.safeParse(body);
+    const updateSaudizationSchema = saudaizationZodSchema.partial();
+    const result = updateSaudizationSchema.safeParse(body);
     if (!result.success) {
         return next(new AppError(result.error.message, 400));
     }
     const saudizationData = result.data;
-    const saudization = await Saudaization.findByIdAndUpdate(id, saudizationData, { new: true, runValidators: true }).populate('organization', '+ownerName');
+    if (saudizationData.organization) {
+        const organizationExists = await Organization.findById(saudizationData.organization).select("_id ownerName");
+        if (!organizationExists) {
+            return next(new AppError("Organization not found", 404));
+        }
+    }
+
+    const saudization = await Saudaization.findByIdAndUpdate(id, saudizationData, { new: true, runValidators: true }).populate('organization', 'ownerName');
     if (!saudization) {
         return next(new AppError("No saudization found with that ID", 404));
     }
@@ -59,7 +80,7 @@ const getSaudizationRecord = catchAsync(async (req: Request, res: Response, next
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid saudization ID format", 400));
     }
-    const saudization = await Saudaization.findById(id).populate('organization', '+ownerName');
+    const saudization = await Saudaization.findById(id).populate('organization', 'ownerName');
     if (!saudization) {
         return next(new AppError("No saudization found with that ID", 404));
     }
@@ -87,7 +108,7 @@ const getAllSaudizationsRecords = catchAsync(async (req: Request, res: Response,
     const saudizations = await Saudaization.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ date: -1 });
+      .sort({ date: -1 }).populate("organization", "ownerName");
   
     const totalPages = Math.ceil(total / limit);
   
