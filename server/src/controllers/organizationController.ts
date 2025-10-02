@@ -86,11 +86,12 @@ const updateOrganization = catchAsync(async (req: Request, res: Response, next: 
         return next(new AppError("Invalid organization ID format", 400));
     }
     const body = req.body;
-    const result = organizationSchemaZod.safeParse(body);
+    const updateOrganizationSchema = organizationSchemaZod.partial();
+    const result = updateOrganizationSchema.safeParse(req.body);
     if (!result.success) {
         return next(new AppError(result.error.message, 400));
     }
-    const organizationData:OrganizationInputType = result.data;
+    const organizationData:Partial<OrganizationInputType> = result.data;
     const organization = await Organization.findByIdAndUpdate(id, organizationData, { new: true, runValidators: true });
     if (!organization) {
         return next(new AppError("No organization found with that ID", 404));
