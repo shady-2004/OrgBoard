@@ -6,6 +6,46 @@ import Employee from "../models/employeeModel";
 import DailyOperation from "../models/dailyOperationModel";
 import catchAsync from "../utils/catchAsync";
 
+const getOrganizationTotals = async (organizationId: mongoose.Types.ObjectId) => {
+  const employees = await Employee.find({ organization: organizationId }, "_id requestedAmount");
+
+  const requestedAmounts: Record<string, number> = {};
+  employees.forEach((emp) => {
+    requestedAmounts[emp._id.toString()] = emp.requestedAmount || 0;
+  });
+
+  const totalsMap = await getEmployeeTotals(
+    employees.map((emp) => emp._id as mongoose.Types.ObjectId),
+    requestedAmounts
+  );
+
+  return employees.reduce(
+    (acc, emp) => {
+      const totals = totalsMap.get(emp._id.toString()) || {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        revenueRemaining: 0,
+        remaining: emp.requestedAmount || 0,
+      };
+
+      acc.totalRequested += emp.requestedAmount || 0;
+      acc.totalRevenue += totals.totalRevenue || 0;
+      acc.totalExpenses += totals.totalExpenses || 0;
+      acc.totalRevenueRemaining += totals.revenueRemaining || 0;
+      acc.totalRemaining += totals.remaining || 0;
+      return acc;
+    },
+    {
+      totalRequested: 0,
+      totalRevenue: 0,
+      totalExpenses: 0,
+      totalRevenueRemaining: 0,
+      totalRemaining: 0,
+    }
+  );
+};
+
+
 // 🔹 Helper: calculate totals for employees
 const getEmployeeTotals = async (
   employeeIds: mongoose.Types.ObjectId[],
@@ -47,7 +87,7 @@ const createEmployee = catchAsync(async (req: Request, res: Response, next: Next
   }
 
   const employeeData = result.data;
-  const employee = await (await Employee.create(employeeData)).populate("organization", "+name");
+  const employee = await (await Employee.create(employeeData)).populate("organization", "ownerName");
 
   // Totals
   const requestedAmount = employee.requestedAmount || 0;
@@ -73,16 +113,18 @@ const updateEmployee = catchAsync(async (req: Request, res: Response, next: Next
     return next(new AppError("Invalid employee ID format", 400));
   }
 
-  const result = employeeSchemaZod.safeParse(req.body);
+  const updateEmployeeSchema = employeeSchemaZod.partial();
+
+  const result = updateEmployeeSchema.safeParse(req.body);
   if (!result.success) {
     return next(new AppError(result.error.message, 400));
   }
 
-  const employeeData: EmployeeInputType = result.data;
+  const employeeData: Partial<EmployeeInputType> = result.data;
   const employee = await Employee.findByIdAndUpdate(id, employeeData, {
     new: true,
     runValidators: true,
-  }).populate("organization", "+name");
+  }).populate("organization", "ownerName");
 
   if (!employee) {
     return next(new AppError("No employee found with that ID", 404));
@@ -139,27 +181,13 @@ const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
   const employees = await Employee.find(filter, "-__v")
     .skip(skip)
     .limit(limit)
-    .populate("organization", "name");
+    .populate("organization", "ownerName");
 
   const requestedAmounts: Record<string, number> = {};
   employees.forEach((emp) => {
     requestedAmounts[emp._id.toString()] = emp.requestedAmount || 0;
   });
 
-  const totalsMap = await getEmployeeTotals(
-    employees.map((emp) => emp._id as mongoose.Types.ObjectId),
-    requestedAmounts
-  );
-
-  const enrichedEmployees = employees.map((emp) => ({
-    ...emp.toObject(),
-    ...(totalsMap.get(emp._id.toString()) || {
-      totalRevenue: 0,
-      totalExpenses: 0,
-      revenueRemaining: 0,
-      remaining: emp.requestedAmount || 0,
-    }),
-  }));
 
   const totalPages = Math.ceil(totalEmployees / limit);
 
@@ -174,7 +202,7 @@ const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
       next: page < totalPages ? page + 1 : null,
       previous: page > 1 ? page - 1 : null,
     },
-    data: { employees: enrichedEmployees },
+    data: { employees: employees },
   });
 });
 
@@ -184,7 +212,7 @@ const getEmployee = catchAsync(async (req: Request, res: Response, next: NextFun
     return next(new AppError("Invalid employee ID format", 400));
   }
 
-  const employee = await Employee.findById(id).populate("organization", "+name");
+  const employee = await Employee.findById(id).populate("organization", "ownerName");
   if (!employee) {
     return next(new AppError("No employee found with that ID", 404));
   }
@@ -232,8 +260,7 @@ const getAllOrgizationEmployees = catchAsync(
       const totalEmployees = await Employee.countDocuments(filter);
       const employees = await Employee.find(filter, "-__v")
         .skip(skip)
-        .limit(limit)
-        .populate("organization", "name");
+        .limit(limit);
   
       const requestedAmounts: Record<string, number> = {};
       employees.forEach((emp) => {
@@ -258,23 +285,6 @@ const getAllOrgizationEmployees = catchAsync(
         };
       });
   
-      const orgTotals = enrichedEmployees.reduce(
-        (acc, emp) => {
-          acc.totalRequested += emp.requestedAmount || 0;
-          acc.totalRevenue += emp.totalRevenue || 0;
-          acc.totalExpenses += emp.totalExpenses || 0;
-          acc.totalRevenueRemaining += emp.revenueRemaining || 0;
-          acc.totalRemaining += emp.remaining || 0;
-          return acc;
-        },
-        {
-          totalRequested: 0,
-          totalRevenue: 0,
-          totalExpenses: 0,
-          totalRevenueRemaining: 0,
-          totalRemaining: 0,
-        }
-      );
   
       const totalPages = Math.ceil(totalEmployees / limit);
   
@@ -290,9 +300,25 @@ const getAllOrgizationEmployees = catchAsync(
           previous: page > 1 ? page - 1 : null,
         },
          
-        data: { employees: enrichedEmployees ,totals: orgTotals,},
+        data: { employees: enrichedEmployees },
       });
     }
+);
+
+const getOrgEmployeesTotals = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return next(new AppError("Invalid organization ID format", 400));
+    }
+
+    const totals = await getOrganizationTotals(new mongoose.Types.ObjectId(id));
+
+    res.status(200).json({
+      status: "success",
+      data: { totals },
+    });
+  }
 );
 
 const getEmployeesWithExpiredResidence = catchAsync(
@@ -323,11 +349,7 @@ const getEmployeesWithExpiredResidence = catchAsync(
         .limit(limit)
         .select("-__v");
   
-      if (!employees || employees.length === 0) {
-        return next(
-          new AppError("No employees with expired residence permit found", 404)
-        );
-      }
+  
   
       const totalPages = Math.ceil(totalEmployees / limit);
   
@@ -381,11 +403,7 @@ const getEmployeesExpiringSoon = catchAsync(
         .limit(limit)
         .select("-__v");
   
-      if (!employees || employees.length === 0) {
-        return next(
-          new AppError("No employees with residence permit expiring in the next 30 days found", 404)
-        );
-      }
+     
   
       const totalPages = Math.ceil(totalEmployees / limit);
   
@@ -422,4 +440,5 @@ export default {
   getAllOrgizationEmployees,
   getEmployeesWithExpiredResidence,
   getEmployeesExpiringSoon,
+  getOrgEmployeesTotals,
 };
