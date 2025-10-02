@@ -145,7 +145,7 @@ const getOrganizationById = catchAsync(async (req: Request, res: Response, next:
   
 
 const getNamesAndIds = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const organizations = await Organization.find({}, 'name _id');
+    const organizations = await Organization.find({}, 'ownerName');
     res.status(200).json({
         status: "success",
         results: organizations.length,
