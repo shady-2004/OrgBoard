@@ -212,15 +212,15 @@ const getAllOrgizationEmployees = catchAsync(
       const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
       const skip = (page - 1) * limit;
   
-      const { ID } = req.params;
-      if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
+      const { id } = req.params;
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid organization ID format", 400));
       }
 
 
       const search = req.query.search ? String(req.query.search).trim() : null;
       const filter: any = {
-         organization: ID ,
+         organization: id ,
       };
       if (search) {
         filter.$or = [
@@ -289,8 +289,8 @@ const getAllOrgizationEmployees = catchAsync(
           next: page < totalPages ? page + 1 : null,
           previous: page > 1 ? page - 1 : null,
         },
-        totals: orgTotals, 
-        data: { employees: enrichedEmployees },
+         
+        data: { employees: enrichedEmployees ,totals: orgTotals,},
       });
     }
 );

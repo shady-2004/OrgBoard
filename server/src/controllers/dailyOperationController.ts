@@ -168,8 +168,8 @@ const getAllOrgizationDailyOperations = catchAsync(async (req: Request, res: Res
     const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
 
-    const { ID } = req.params;
-    if (!ID.match(/^[0-9a-fA-F]{24}$/)) {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return next(new AppError("Invalid organization ID format", 400));
     }
 
@@ -181,7 +181,7 @@ const getAllOrgizationDailyOperations = catchAsync(async (req: Request, res: Res
     if (endDate) dateFilter.$lte = new Date(endDate as string);
 
     // Build base filter
-    const filter: any = { organization: ID };
+    const filter: any = { organization: id };
     if (startDate || endDate) filter.date = dateFilter;
 
     // Lookup employee if name filter is applied
