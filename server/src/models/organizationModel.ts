@@ -1,4 +1,8 @@
 import { Schema, model, Types, Document } from "mongoose";
+import Employee from "./employeeModel";
+import DailyOperation from "./dailyOperationModel";
+import DailyOrganizationOperation from "./organizationDailyOperationModel";
+import Saudaization from "./saudizationModel";
 
 // Custom validation functions
 const validateNationalId = (id: string): boolean => {
@@ -155,6 +159,28 @@ organizationSchema.pre('save', function(next) {
 
 
   next();
+});
+
+
+
+organizationSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    const orgId = this.getQuery()["_id"];
+
+    // Delete related employees
+    await Employee.deleteMany({ organization: orgId });
+
+    // Delete related daily operations
+    await DailyOperation.deleteMany({ organization: orgId });
+
+    await DailyOrganizationOperation.deleteMany({ organization: orgId });
+
+    await Saudaization.deleteMany({ organization: orgId });
+
+    next();
+  } catch (err) {
+    next(err as Error);
+  }
 });
 
 

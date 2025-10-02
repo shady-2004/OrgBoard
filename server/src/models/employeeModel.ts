@@ -1,5 +1,6 @@
 import { Schema, model, Document, Types } from "mongoose";
 import Organization from "./organizationModel";
+import DailyOperation from "./dailyOperationModel";
 
 export interface IEmployee extends Document {
     _id: Types.ObjectId;            
@@ -76,7 +77,18 @@ const employeeSchema = new Schema<IEmployee>(
 
 
 
+employeeSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    const empId = this.getQuery()["_id"];
 
+    // Delete all daily operations linked to this employee
+    await DailyOperation.deleteMany({ employee: empId });
+
+    next();
+  } catch (err) {
+    next(err as Error);
+  }
+});
 
 
 const Employee = model<IEmployee>("Employee", employeeSchema);
