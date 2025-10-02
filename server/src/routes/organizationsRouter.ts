@@ -12,5 +12,6 @@ organizationsRouter.patch("/:id", organizationController.updateOrganization);
 organizationsRouter.get("/:id", organizationController.getOrganizationById);
 organizationsRouter.get("/names/ids", organizationController.getNamesAndIds);
 organizationsRouter.get("/:id/employees", employeeController.getAllOrgizationEmployees);
+organizationsRouter.get("/:id/employees/totals", employeeController.getOrgEmployeesTotals);
 organizationsRouter.get("/:id/daily-operations", dailyOperationController.getAllOrgizationDailyOperations);
 export default organizationsRouter;

@@ -46,12 +46,6 @@ const employeeSchema = new Schema<IEmployee>(
         message: "Work card issue date cannot be in the future",
       },
     },
-    roleInOrganization: {
-      type: String,
-      required: [true, "Role in organization is required"],
-      trim: true,
-      maxlength: [50, "Role cannot exceed 50 characters"],
-    },
     requestedAmount: {
       type: Number,
       required: [true, "Requested amount is required"],
