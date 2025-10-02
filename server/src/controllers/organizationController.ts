@@ -15,7 +15,7 @@ const createOrganization = catchAsync(async (req: Request, res: Response, next: 
         return next(new AppError(result.error.message, 400));
     }
     const organizationData:OrganizationInputType = result.data;
-    const organization = Organization.create(organizationData);
+    const organization = await Organization.create(organizationData);
     res.status(201).json({
         status: "success",
         data: {
@@ -34,7 +34,7 @@ const getAllOrganizations = catchAsync(async (req: Request, res: Response, next:
     const filter: any = {
       };
       if (nameSearch) {
-        filter.ownerName = { $regex: nameSearch, $options: "i" }; // case-insensitive
+       filter.ownerName = { $regex: `\\b${nameSearch}\\b`, $options: "i" };
       }
 
     // Total number of organizations
@@ -86,11 +86,12 @@ const updateOrganization = catchAsync(async (req: Request, res: Response, next: 
         return next(new AppError("Invalid organization ID format", 400));
     }
     const body = req.body;
-    const result = organizationSchemaZod.safeParse(body);
+    const updateOrganizationSchema = organizationSchemaZod.partial();
+    const result = updateOrganizationSchema.safeParse(req.body);
     if (!result.success) {
         return next(new AppError(result.error.message, 400));
     }
-    const organizationData:OrganizationInputType = result.data;
+    const organizationData:Partial<OrganizationInputType> = result.data;
     const organization = await Organization.findByIdAndUpdate(id, organizationData, { new: true, runValidators: true });
     if (!organization) {
         return next(new AppError("No organization found with that ID", 404));
@@ -144,7 +145,7 @@ const getOrganizationById = catchAsync(async (req: Request, res: Response, next:
   
 
 const getNamesAndIds = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const organizations = await Organization.find({}, 'name _id');
+    const organizations = await Organization.find({}, 'ownerName');
     res.status(200).json({
         status: "success",
         results: organizations.length,

@@ -65,10 +65,6 @@ export const organizationSchemaZod = z
       .max(10000000, "Sponsor amount cannot exceed 10,000,000 SAR")
       .int("Sponsor amount must be a whole number"),
 
-    employees: z
-      .array(z.string())
-      .max(1000, "Cannot have more than 1000 employees")
-      .optional(),
   })
   .superRefine((data, ctx) => {
     // Validate date fields against birthDate

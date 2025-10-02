@@ -33,7 +33,7 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("combined"));
 }
 
-app.use("/donorGo/api/v1", router);
+app.use("/OrgBoard/api/v1", router);
 
 app.use(globalErrorHanlder);
 
