@@ -4,6 +4,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
+import { OrganizationDetailPage } from '../pages/organizations/OrganizationDetailPage';
 
 // Placeholder pages
 const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear here</p></div>;
@@ -43,6 +44,7 @@ export const AppRouter = () => {
           <Route path="/organizations" element={<OrganizationsPage />} />
           <Route path="/organizations/add" element={<AddOrganizationPage />} />
           <Route path="/organizations/edit/:id" element={<EditOrganizationPage />} />
+          <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
           
           {/* Daily Operations */}
           <Route path="/daily-operations" element={<DailyOperationsPage />} />

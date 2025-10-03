@@ -6,11 +6,11 @@ export const Sidebar = () => {
 
   const menuItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: '📊' },
-    { path: '/users', label: t('nav.users'), icon: '👥' },
     { path: '/organizations', label: t('nav.organizations'), icon: '🏢' },
     { path: '/daily-operations', label: t('nav.dailyOperations'), icon: '📝' },
     { path: '/office-operations', label: t('nav.officeOperations'), icon: '🏭' },
     { path: '/saudization', label: t('nav.saudization'), icon: '🇸🇦' },
+    { path: '/users', label: t('nav.users'), icon: '👥' },
     { path: '/settings', label: t('nav.settings'), icon: '⚙️' },
   ];
 
