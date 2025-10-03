@@ -18,5 +18,15 @@ export const addUserSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
 
+
+export const changePasswordSchema = z.object({
+  currentPassword: z
+    .string()
+    .min(8, "Current password must be at least 8 characters long"),
+  newPassword: z
+    .string()
+    .min(8, "New password must be at least 8 characters long"),
+});
+
 // Login schema (just email + password)
 export const loginSchema = authSchema;
