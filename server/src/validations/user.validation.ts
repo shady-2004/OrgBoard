@@ -14,5 +14,9 @@ export const signupSchema = authSchema.extend({
   role: z.enum(["admin", "user"]).default("user"),
 });
 
+export const addUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
 // Login schema (just email + password)
 export const loginSchema = authSchema;
