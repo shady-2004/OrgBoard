@@ -1,4 +1,6 @@
-export const Input = ({
+import { forwardRef } from 'react';
+
+export const Input = forwardRef(({
   label,
   type = 'text',
   name,
@@ -8,8 +10,9 @@ export const Input = ({
   error,
   required = false,
   disabled = false,
-  className = ''
-}) => {
+  className = '',
+  ...rest
+}, ref) => {
   return (
     <div className={`w-full ${className}`}>
       {label && (
@@ -19,6 +22,7 @@ export const Input = ({
         </label>
       )}
       <input
+        ref={ref}
         type={type}
         id={name}
         name={name}
@@ -30,8 +34,9 @@ export const Input = ({
         className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
           error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
         }`}
+        {...rest}
       />
       {error && <span className="text-red-500 text-sm mt-1 block">{error}</span>}
     </div>
   );
-};
+});

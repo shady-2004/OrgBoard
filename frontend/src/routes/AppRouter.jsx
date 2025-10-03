@@ -5,12 +5,12 @@ import { RegisterPage } from '../pages/auth/RegisterPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { OrganizationDetailPage } from '../pages/organizations/OrganizationDetailPage';
+import { AddOrganizationPage } from '../pages/organizations/AddOrganizationPage';
 
 // Placeholder pages
 const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear here</p></div>;
 const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear here</p></div>;
 
-const AddOrganizationPage = () => <div><h1>Add Organization</h1><p>Add organization form will appear here</p></div>;
 const EditOrganizationPage = () => <div><h1>Edit Organization</h1><p>Edit organization form will appear here</p></div>;
 
 const DailyOperationsPage = () => <div><h1>Daily Operations Page</h1><p>List of daily operations will appear here</p></div>;
