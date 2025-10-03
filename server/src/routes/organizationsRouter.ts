@@ -2,6 +2,7 @@ import{ Router } from "express";
 import organizationController from "../controllers/organization.controller";
 import employeeController from "../controllers/employee.controller";
 import dailyOperationController from "../controllers/dailyOperation.controller";
+import organizationDailyOperationController from "../controllers/organizationDailyOperation.controller";
 const organizationsRouter = Router();
 
 
@@ -18,4 +19,5 @@ organizationsRouter.get("/:id/employees/names", employeeController.getOrgEmploye
 organizationsRouter.get("/:id/daily-operations", dailyOperationController.getAllOrgizationDailyOperations);
 organizationsRouter.get("/:id/daily-operations/totals", dailyOperationController.getOrgDailyOperationsTotals);
 organizationsRouter.get("/:id/daily-operations/count", dailyOperationController.getOrgDailyOperationsCount);
+organizationsRouter.get("/:id/organization-daily-operations", organizationDailyOperationController.getOrgDailyOperations);
 export default organizationsRouter;

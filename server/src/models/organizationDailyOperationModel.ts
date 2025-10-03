@@ -28,7 +28,10 @@ const dailyOrganizationOperationSchema = new Schema<IDailyOrganizationOperation>
       required: [true, 'Amount is required'],
       min: [0, 'Amount cannot be negative']
     },
-    
+    notes: {
+      type: String,
+      maxlength: [500, 'Notes cannot exceed 500 characters']
+    }
   },
   { timestamps: true }
 );

@@ -13,14 +13,15 @@ import { AddEmployeePage } from '../pages/employees/AddEmployeePage';
 import { EditEmployeePage } from '../pages/employees/EditEmployeePage';
 import { AddDailyOperationPage } from '../pages/daily-operations/AddDailyOperationPage';
 import { EditDailyOperationPage } from '../pages/daily-operations/EditDailyOperationPage';
+import { OrganizationDailyOperationsListPage } from '../pages/organization-daily-operations/OrganizationDailyOperationsListPage';
+import { AddOrganizationDailyOperationPage } from '../pages/organization-daily-operations/AddOrganizationDailyOperationPage';
+import { EditOrganizationDailyOperationPage } from '../pages/organization-daily-operations/EditOrganizationDailyOperationPage';
 
 // Placeholder pages
 const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear here</p></div>;
 const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear here</p></div>;
 
 const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
-
-const DailyOperationsPage = () => <div><h1>Daily Operations Page</h1><p>List of daily operations will appear here</p></div>;
 
 const OfficeOperationsPage = () => <div><h1>Office Operations Page</h1><p>List of office operations will appear here</p></div>;
 const AddOfficeOperationPage = () => <div><h1>Add Office Operation</h1><p>Add office operation form will appear here</p></div>;
@@ -53,16 +54,20 @@ export const AppRouter = () => {
           <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
           <Route path="/organizations/:id/employees" element={<OrganizationEmployeesPage />} />
           <Route path="/organizations/:id/daily-operations" element={<OrganizationDailyOperationsPage />} />
+          <Route path="/organizations/:id/organization-daily-operations" element={<OrganizationDailyOperationsListPage />} />
           
           {/* Employees */}
           <Route path="/employees" element={<EmployeesPage />} />
           <Route path="/employees/add" element={<AddEmployeePage />} />
           <Route path="/employees/edit/:id" element={<EditEmployeePage />} />
           
-          {/* Daily Operations */}
-          <Route path="/daily-operations" element={<DailyOperationsPage />} />
+          {/* Daily Operations (Employee-related) */}
           <Route path="/daily-operations/add" element={<AddDailyOperationPage />} />
           <Route path="/daily-operations/edit/:id" element={<EditDailyOperationPage />} />
+          
+          {/* Organization Daily Operations (Financial Transfers) */}
+          <Route path="/organization-daily-operations/add" element={<AddOrganizationDailyOperationPage />} />
+          <Route path="/organization-daily-operations/edit/:id" element={<EditOrganizationDailyOperationPage />} />
           
           {/* Office Operations */}
           <Route path="/office-operations" element={<OfficeOperationsPage />} />

@@ -194,6 +194,23 @@ const getOrgDailyOperations = catchAsync(async (req: Request, res: Response, nex
       data: { dailyOperations },
     });
   });
+
+const getOrgDailyOperationById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return next(new AppError("Invalid organization daily operation ID format", 400));
+    }
+  
+    const operation = await DailyOrganizationOperation.findById(id).populate('organization', 'ownerName');
+    if (!operation) {
+      return next(new AppError("No organization daily operation found with that ID", 404));
+    }
+  
+    res.status(200).json({
+      status: "success",
+      data: { operation },
+    });
+  });
   
 
 export default {
@@ -201,5 +218,6 @@ export default {
     deleteOrgDailyOperation,
     updateOrgDailyOperation,
     getAllOrgDailyOperations,
-    getOrgDailyOperations
+    getOrgDailyOperations,
+    getOrgDailyOperationById
 };

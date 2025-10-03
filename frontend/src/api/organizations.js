@@ -85,4 +85,16 @@ export const organizationsAPI = {
     const { data } = await api.get(`/organizations/${id}/daily-operations/totals`);
     return data;
   },
+
+  getOrganizationDailyOperations: async (id, params = {}) => {
+    const { page = 1, limit = 10, startDate = '', endDate = '' } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    });
+    const { data } = await api.get(`/organizations/${id}/organization-daily-operations?${queryParams}`);
+    return data;
+  },
 };

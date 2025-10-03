@@ -209,7 +209,7 @@ export const OrganizationDetailPage = () => {
         </Card>
 
         {/* Quick Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Daily Operations Card */}
           <Card>
             <div className="p-6">
@@ -299,13 +299,34 @@ export const OrganizationDetailPage = () => {
               </Button>
             </div>
           </Card>
+
+          {/* Organization Daily Operations Card */}
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <span className="text-purple-600">�</span>
+                  التحويلات المالية
+                </h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                تتبع المبالغ المحولة للمنظمة (دفعات العملاء، إيجارات مستلمة، تحويلات الكفيل)
+              </p>
+              <Button 
+                className="w-full"
+                onClick={() => navigate(`/organizations/${id}/organization-daily-operations`)}
+              >
+                عرض التحويلات المالية →
+              </Button>
+            </div>
+          </Card>
         </div>
 
         {/* Action Buttons */}
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">إجراءات سريعة</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <Button 
                 variant="secondary"
                 onClick={() => navigate(`/employees/add?organizationId=${id}`)}
@@ -317,6 +338,12 @@ export const OrganizationDetailPage = () => {
                 onClick={() => navigate(`/daily-operations/add?organizationId=${id}`)}
               >
                 + تسجيل عملية يومية
+              </Button>
+              <Button 
+                variant="secondary"
+                onClick={() => navigate(`/organization-daily-operations/add?organizationId=${id}`)}
+              >
+                + إضافة تحويل مالي
               </Button>
             </div>
           </div>

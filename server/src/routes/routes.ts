@@ -8,12 +8,14 @@ import dailyOperationsRouter from "./dailyOperationRouter";
 import userRouter from "./usersRouter";
 import organizationDailyOperationRouter from "./organizationDailyOperationRouter";
 import authRouter from "./authRouter";
+import dashboardRouter from "./dashboardRouter";
 import protect from "../middlewares/protect";
 
 const router = Router();
 
 // Mount all routers
 router.use('/auth', authRouter);
+router.use('/dashboard', protect, dashboardRouter);
 router.use('/users',protect,userRouter)
 router.use('/organizations',protect, organizationsRouter);
 router.use('/employees', protect, employeesRouter);

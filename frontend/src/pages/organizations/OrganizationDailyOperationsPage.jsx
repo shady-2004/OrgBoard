@@ -5,7 +5,6 @@ import { organizationsAPI } from '../../api/organizations';
 import { dailyOperationsAPI } from '../../api/dailyOperations';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { SearchBar } from '../../components/ui/SearchBar';
 import { Table } from '../../components/tables/Table';
 import { Pagination } from '../../components/tables/Pagination';
 import { Toast } from '../../components/ui/Toast';
@@ -21,10 +20,14 @@ export const OrganizationDailyOperationsPage = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, operationId: null, operationDate: '' });
 
   const debouncedSearch = useDebounce(searchTerm, 500);
+  const debouncedStartDate = useDebounce(startDate, 500);
+  const debouncedEndDate = useDebounce(endDate, 500);
 
   // Fetch organization basic info
   const { data: orgData } = useQuery({
@@ -35,8 +38,14 @@ export const OrganizationDailyOperationsPage = () => {
 
   // Fetch daily operations
   const { data, isLoading, error } = useQuery({
-    queryKey: ['organization-daily-operations', id, page, limit, debouncedSearch],
-    queryFn: () => organizationsAPI.getDailyOperations(id, { page, limit, employeeName: debouncedSearch }),
+    queryKey: ['organization-daily-operations', id, page, limit, debouncedSearch, debouncedStartDate, debouncedEndDate],
+    queryFn: () => organizationsAPI.getDailyOperations(id, { 
+      page, 
+      limit, 
+      employeeName: debouncedSearch,
+      startDate: debouncedStartDate,
+      endDate: debouncedEndDate,
+    }),
     enabled: !!id,
   });
 
@@ -184,20 +193,71 @@ export const OrganizationDailyOperationsPage = () => {
           </Card>
         )}
 
-        {/* Search */}
-        {dailyOperations.length > 0 && (
-          <SearchBar
-            value={searchTerm}
-            onChange={(value) => {
-              setSearchTerm(value);
-              setPage(1);
-            }}
-            placeholder="ابحث عن عملية باسم الموظف..."
-            showResults={!!debouncedSearch}
-            resultsText={debouncedSearch}
-            resultsCount={data?.pagination?.total}
-          />
-        )}
+        {/* Filters */}
+        <Card className="mb-6">
+          <div className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  من تاريخ
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  إلى تاريخ
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  بحث بالموظف
+                </label>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="ابحث عن موظف..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                {(startDate || endDate || searchTerm) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setStartDate('');
+                      setEndDate('');
+                      setSearchTerm('');
+                      setPage(1);
+                    }}
+                  >
+                    مسح الفلاتر
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Daily Operations Table - Only show if there are operations */}
         {!isLoading && dailyOperations.length > 0 && (
