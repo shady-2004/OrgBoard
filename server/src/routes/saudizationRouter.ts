@@ -1,5 +1,5 @@
 import { Router } from "express";
-import saudizationController from "../controllers/saudizationController";
+import saudizationController from "../controllers/saudization.controller";
 const saudizationRouter = Router();
 
 saudizationRouter.post("/", saudizationController.createSaudizationRecord);

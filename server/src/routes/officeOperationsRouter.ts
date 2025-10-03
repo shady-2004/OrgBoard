@@ -1,5 +1,5 @@
 import{ Router } from "express";
-import officeOperationsController from "../controllers/officeOperationController";
+import officeOperationsController from "../controllers/officeOperation.controller";
 const officeOperationsRouter = Router();
 officeOperationsRouter.post("/", officeOperationsController.createOfficeOperation);
 officeOperationsRouter.get("/", officeOperationsController.getAllOfficeOperations);
