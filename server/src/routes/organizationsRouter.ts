@@ -14,5 +14,8 @@ organizationsRouter.get("/names/ids", organizationController.getNamesAndIds);
 organizationsRouter.get("/:id/employees", employeeController.getAllOrgizationEmployees);
 organizationsRouter.get("/:id/employees/totals", employeeController.getOrgEmployeesTotals);
 organizationsRouter.get("/:id/employees/count", employeeController.getOrgEmployeesCount);
+organizationsRouter.get("/:id/employees/names", employeeController.getOrgEmployeesNamesAndIds);
 organizationsRouter.get("/:id/daily-operations", dailyOperationController.getAllOrgizationDailyOperations);
+organizationsRouter.get("/:id/daily-operations/totals", dailyOperationController.getOrgDailyOperationsTotals);
+organizationsRouter.get("/:id/daily-operations/count", dailyOperationController.getOrgDailyOperationsCount);
 export default organizationsRouter;

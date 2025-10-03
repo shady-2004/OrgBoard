@@ -5,6 +5,7 @@ import AppError from "../utils/AppError";
 import DailyOperation from "../models/dailyOperationModel";
 import Organization from "../models/organizationModel";
 import Employee from "../models/employeeModel";
+import mongoose from "mongoose";
 const createDailyOperation = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const result = dailyOperationSchemaZod.safeParse(req.body);
 
@@ -258,12 +259,69 @@ const getAllOrgizationDailyOperations = catchAsync(async (req: Request, res: Res
     });
 });
 
+const getOrgDailyOperationsCount = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        return next(new AppError("Invalid organization ID format", 400));
+    }
+
+    const count = await DailyOperation.countDocuments({ organization: id });
+
+    res.status(200).json({
+        status: "success",
+        data: { count },
+    });
+});
+
+const getOrgDailyOperationsTotals = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        return next(new AppError("Invalid organization ID format", 400));
+    }
+
+    const totals = await DailyOperation.aggregate([
+        { $match: { organization: new mongoose.Types.ObjectId(id) } },
+        {
+            $group: {
+                _id: null,
+                totalRevenue: {
+                    $sum: { $cond: [{ $eq: ["$category", "revenue"] }, "$amount", 0] },
+                },
+                totalExpenses: {
+                    $sum: { $cond: [{ $eq: ["$category", "expense"] }, "$amount", 0] },
+                },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                totalRevenue: 1,
+                totalExpenses: 1,
+                netAmount: { $subtract: ["$totalRevenue", "$totalExpenses"] },
+            },
+        },
+    ]);
+
+    const result = totals[0] || {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        netAmount: 0,
+    };
+
+    res.status(200).json({
+        status: "success",
+        data: { totals: result },
+    });
+});
+
 
 export default {
     createDailyOperation,
     deleteDailyOperation,
     updateDailyOperation,
     getAllDailyOperations,
-    getDailyOperation , 
-    getAllOrgizationDailyOperations
+    getDailyOperation,
+    getAllOrgizationDailyOperations,
+    getOrgDailyOperationsCount,
+    getOrgDailyOperationsTotals,
 }

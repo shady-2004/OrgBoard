@@ -8,15 +8,19 @@ import { OrganizationDetailPage } from '../pages/organizations/OrganizationDetai
 import { OrganizationEmployeesPage } from '../pages/organizations/OrganizationEmployeesPage';
 import { OrganizationDailyOperationsPage } from '../pages/organizations/OrganizationDailyOperationsPage';
 import { AddOrganizationPage } from '../pages/organizations/AddOrganizationPage';
+import { EditOrganizationPage } from '../pages/organizations/EditOrganizationPage';
+import { AddEmployeePage } from '../pages/employees/AddEmployeePage';
+import { EditEmployeePage } from '../pages/employees/EditEmployeePage';
+import { AddDailyOperationPage } from '../pages/daily-operations/AddDailyOperationPage';
+import { EditDailyOperationPage } from '../pages/daily-operations/EditDailyOperationPage';
 
 // Placeholder pages
 const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear here</p></div>;
 const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear here</p></div>;
 
-const EditOrganizationPage = () => <div><h1>Edit Organization</h1><p>Edit organization form will appear here</p></div>;
+const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
 
 const DailyOperationsPage = () => <div><h1>Daily Operations Page</h1><p>List of daily operations will appear here</p></div>;
-const AddDailyOperationPage = () => <div><h1>Add Daily Operation</h1><p>Add daily operation form will appear here</p></div>;
 
 const OfficeOperationsPage = () => <div><h1>Office Operations Page</h1><p>List of office operations will appear here</p></div>;
 const AddOfficeOperationPage = () => <div><h1>Add Office Operation</h1><p>Add office operation form will appear here</p></div>;
@@ -50,9 +54,15 @@ export const AppRouter = () => {
           <Route path="/organizations/:id/employees" element={<OrganizationEmployeesPage />} />
           <Route path="/organizations/:id/daily-operations" element={<OrganizationDailyOperationsPage />} />
           
+          {/* Employees */}
+          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/employees/add" element={<AddEmployeePage />} />
+          <Route path="/employees/edit/:id" element={<EditEmployeePage />} />
+          
           {/* Daily Operations */}
           <Route path="/daily-operations" element={<DailyOperationsPage />} />
           <Route path="/daily-operations/add" element={<AddDailyOperationPage />} />
+          <Route path="/daily-operations/edit/:id" element={<EditDailyOperationPage />} />
           
           {/* Office Operations */}
           <Route path="/office-operations" element={<OfficeOperationsPage />} />

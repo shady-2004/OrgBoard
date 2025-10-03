@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationsAPI } from '../../api/organizations';
+import { employeesAPI } from '../../api/employees';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { Table } from '../../components/tables/Table';
 import { Pagination } from '../../components/tables/Pagination';
 import { Toast } from '../../components/ui/Toast';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useDebounce } from '../../hooks/useDebounce';
 import { formatDate } from '../../utils/formatDate';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -20,6 +22,7 @@ export const OrganizationEmployeesPage = () => {
   const [limit] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, employeeId: null, employeeName: '' });
 
   const debouncedSearch = useDebounce(searchTerm, 500);
 
@@ -48,6 +51,40 @@ export const OrganizationEmployeesPage = () => {
   const employees = data?.data?.employees || [];
   const totals = totalsData?.data?.totals;
 
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => employeesAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['organization-employees', id]);
+      queryClient.invalidateQueries(['organization-employees-totals', id]);
+      queryClient.invalidateQueries(['organization-employees-count', id]);
+      setToast({ visible: true, message: 'تم حذف الموظف بنجاح', type: 'success' });
+      setConfirmDialog({ isOpen: false, employeeId: null, employeeName: '' });
+    },
+    onError: (error) => {
+      setToast({
+        visible: true,
+        message: error.response?.data?.message || 'حدث خطأ أثناء حذف الموظف',
+        type: 'error',
+      });
+      setConfirmDialog({ isOpen: false, employeeId: null, employeeName: '' });
+    },
+  });
+
+  const handleDeleteClick = (employee) => {
+    setConfirmDialog({
+      isOpen: true,
+      employeeId: employee._id,
+      employeeName: employee.name,
+    });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (confirmDialog.employeeId) {
+      deleteMutation.mutate(confirmDialog.employeeId);
+    }
+  };
+
   if (!organization && !isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -71,6 +108,18 @@ export const OrganizationEmployeesPage = () => {
         type={toast.type}
         isVisible={toast.visible}
         onClose={() => setToast({ ...toast, visible: false })}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, employeeId: null, employeeName: '' })}
+        onConfirm={handleDeleteConfirm}
+        title="تأكيد حذف الموظف"
+        message={`هل أنت متأكد من حذف الموظف "${confirmDialog.employeeName}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+        confirmText="حذف"
+        cancelText="إلغاء"
+        confirmVariant="danger"
+        isLoading={deleteMutation.isPending}
       />
 
       <div>
@@ -148,145 +197,160 @@ export const OrganizationEmployeesPage = () => {
         )}
 
         {/* Search */}
-        <SearchBar
-          value={searchTerm}
-          onChange={(value) => {
-            setSearchTerm(value);
-            setPage(1);
-          }}
-          placeholder="ابحث عن موظف بالاسم أو رقم الإقامة..."
-          showResults={!!debouncedSearch}
-          resultsText={debouncedSearch}
-          resultsCount={data?.pagination?.total}
-        />
+        {employees.length > 0 && (
+          <SearchBar
+            value={searchTerm}
+            onChange={(value) => {
+              setSearchTerm(value);
+              setPage(1);
+            }}
+            placeholder="ابحث عن موظف بالاسم أو رقم الإقامة..."
+            showResults={!!debouncedSearch}
+            resultsText={debouncedSearch}
+            resultsCount={data?.pagination?.total}
+          />
+        )}
 
-        {/* Employees Table */}
-        <Card>
-          <div className="p-6">
-            <Table
-              columns={[
-                {
-                  label: 'اسم الموظف',
-                  key: 'name',
-                  className: 'text-gray-900 font-medium',
-                },
-                {
-                  label: 'رقم الإقامة',
-                  key: 'residencePermitNumber',
-                  className: 'text-gray-600',
-                },
-                {
-                  label: 'تاريخ انتهاء الإقامة',
-                  key: 'residencePermitExpiry',
-                  className: 'text-gray-600',
-                  render: (row, value) => {
-                    const expiryDate = new Date(value);
-                    const today = new Date();
-                    const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                    
-                    const isExpired = expiryDate < today;
-                    const isExpiringSoon = expiryDate >= today && expiryDate <= thirtyDaysLater;
-                    
-                    return (
-                      <span className={
-                        isExpired
-                          ? 'text-red-600 font-semibold'
-                          : isExpiringSoon
-                          ? 'text-orange-600 font-semibold'
-                          : ''
-                      }>
-                        {formatDate(value)}
-                        {isExpired && ' (منتهية)'}
-                        {isExpiringSoon && ' (قريبة الانتهاء)'}
-                      </span>
-                    );
+        {/* Employees Table - Only show if there are employees */}
+        {!isLoading && employees.length > 0 && (
+          <Card>
+            <div className="p-6">
+              <Table
+                columns={[
+                  {
+                    label: 'اسم الموظف',
+                    key: 'name',
+                    className: 'text-gray-900 font-medium',
                   },
-                },
-                {
-                  label: 'المبلغ المطلوب',
-                  key: 'requestedAmount',
-                  className: 'text-gray-900',
-                  render: (row, value) => formatCurrency(value || 0),
-                },
-                {
-                  label: 'الإيرادات',
-                  key: 'totalRevenue',
-                  className: 'text-green-600',
-                  render: (row, value) => formatCurrency(value || 0),
-                },
-                {
-                  label: 'المصروفات',
-                  key: 'totalExpenses',
-                  className: 'text-red-600',
-                  render: (row, value) => formatCurrency(value || 0),
-                },
-                {
-                  label: 'المتبقي',
-                  key: 'remaining',
-                  className: 'text-orange-600 font-semibold',
-                  render: (row, value) => formatCurrency(value || 0),
-                },
-                {
-                  key: 'actions',
-                  render: (row) => (
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => navigate(`/employees/${row._id}`)}
-                      >
-                        عرض
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => navigate(`/employees/edit/${row._id}`)}
-                      >
-                        تعديل
-                      </Button>
-                    </div>
-                  ),
-                },
-              ]}
-              data={employees}
-              keyField="_id"
-              loading={isLoading}
-              loadingMessage="جاري تحميل الموظفين..."
-              emptyMessage={
-                debouncedSearch
-                  ? `لا توجد نتائج للبحث عن "${debouncedSearch}"`
-                  : 'لا يوجد موظفون مرتبطون بهذه المنظمة'
-              }
-            />
+                  {
+                    label: 'رقم الإقامة',
+                    key: 'residencePermitNumber',
+                    className: 'text-gray-600',
+                  },
+                  {
+                    label: 'تاريخ انتهاء الإقامة',
+                    key: 'residencePermitExpiry',
+                    className: 'text-gray-600',
+                    render: (row, value) => {
+                      const expiryDate = new Date(value);
+                      const today = new Date();
+                      const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                      
+                      const isExpired = expiryDate < today;
+                      const isExpiringSoon = expiryDate >= today && expiryDate <= thirtyDaysLater;
+                      
+                      return (
+                        <span className={
+                          isExpired
+                            ? 'text-red-600 font-semibold'
+                            : isExpiringSoon
+                            ? 'text-orange-600 font-semibold'
+                            : ''
+                        }>
+                          {formatDate(value)}
+                          {isExpired && ' (منتهية)'}
+                          {isExpiringSoon && ' (قريبة الانتهاء)'}
+                        </span>
+                      );
+                    },
+                  },
+                  {
+                    label: 'المبلغ المطلوب',
+                    key: 'requestedAmount',
+                    className: 'text-gray-900',
+                    render: (row, value) => formatCurrency(value || 0),
+                  },
+                  {
+                    label: 'الإيرادات',
+                    key: 'totalRevenue',
+                    className: 'text-green-600',
+                    render: (row, value) => formatCurrency(value || 0),
+                  },
+                  {
+                    label: 'المصروفات',
+                    key: 'totalExpenses',
+                    className: 'text-red-600',
+                    render: (row, value) => formatCurrency(value || 0),
+                  },
+                  {
+                    label: 'المتبقي',
+                    key: 'remaining',
+                    className: 'text-orange-600 font-semibold',
+                    render: (row, value) => formatCurrency(value || 0),
+                  },
+                  {
+                    key: 'actions',
+                    render: (row) => (
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => navigate(`/employees/edit/${row._id}`)}
+                        >
+                          تعديل
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleDeleteClick(row)}
+                        >
+                          حذف
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={employees}
+                keyField="_id"
+                loading={isLoading}
+                loadingMessage="جاري تحميل الموظفين..."
+                emptyMessage={
+                  debouncedSearch
+                    ? `لا توجد نتائج للبحث عن "${debouncedSearch}"`
+                    : 'لا يوجد موظفون مرتبطون بهذه المنظمة'
+                }
+              />
 
-            {/* Pagination */}
-            {data?.pagination && data.pagination.totalPages > 1 && (
-              <div className="mt-6">
-                <Pagination
-                  currentPage={page}
-                  totalPages={data.pagination.totalPages}
-                  totalItems={data.pagination.total}
-                  itemsPerPage={data.results}
-                  onPageChange={setPage}
-                  hasNext={!!data.pagination.next}
-                  hasPrevious={!!data.pagination.previous}
-                  itemLabel="موظف"
-                />
-              </div>
-            )}
-          </div>
-        </Card>
+              {/* Pagination */}
+              {data?.pagination && data.pagination.totalPages > 1 && (
+                <div className="mt-6">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={data.pagination.totalPages}
+                    totalItems={data.pagination.total}
+                    itemsPerPage={data.results}
+                    onPageChange={setPage}
+                    hasNext={!!data.pagination.next}
+                    hasPrevious={!!data.pagination.previous}
+                    itemLabel="موظف"
+                  />
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Empty State with Action */}
-        {!isLoading && employees.length === 0 && !debouncedSearch && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">👥</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">لا يوجد موظفون بعد</h3>
-            <p className="text-gray-600 mb-6">ابدأ بإضافة أول موظف لهذه المنظمة</p>
-            <Button onClick={() => navigate(`/employees/add?organizationId=${id}`)}>
-              + إضافة أول موظف
-            </Button>
-          </div>
+        {!isLoading && employees.length === 0 && (
+          <Card>
+            <div className="p-12 text-center">
+              <div className="text-gray-400 text-6xl mb-4">👥</div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                {debouncedSearch ? 'لا توجد نتائج للبحث' : 'لا يوجد موظفون بعد'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {debouncedSearch 
+                  ? `لم يتم العثور على موظفين يحتوون على "${debouncedSearch}"`
+                  : 'ابدأ بإضافة أول موظف لهذه المنظمة'
+                }
+              </p>
+              {!debouncedSearch && (
+                <Button onClick={() => navigate(`/employees/add?organizationId=${id}`)}>
+                  + إضافة أول موظف
+                </Button>
+              )}
+            </div>
+          </Card>
         )}
       </div>
     </>

@@ -58,8 +58,31 @@ export const organizationsAPI = {
     return data;
   },
 
-  getDailyOperations: async (id) => {
-    const { data } = await api.get(`/organizations/${id}/daily-operations`);
+  getEmployeesNamesAndIds: async (id) => {
+    const { data } = await api.get(`/organizations/${id}/employees/names`);
+    return data;
+  },
+
+  getDailyOperations: async (id, params = {}) => {
+    const { page = 1, limit = 10, employeeName = '', startDate = '', endDate = '' } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(employeeName && { employeeName }),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    });
+    const { data } = await api.get(`/organizations/${id}/daily-operations?${queryParams}`);
+    return data;
+  },
+
+  getDailyOperationsCount: async (id) => {
+    const { data } = await api.get(`/organizations/${id}/daily-operations/count`);
+    return data;
+  },
+
+  getDailyOperationsTotals: async (id) => {
+    const { data } = await api.get(`/organizations/${id}/daily-operations/totals`);
     return data;
   },
 };

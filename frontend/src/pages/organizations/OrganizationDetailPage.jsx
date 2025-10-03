@@ -32,9 +32,25 @@ export const OrganizationDetailPage = () => {
     enabled: !!id,
   });
 
+  // Fetch daily operations count
+  const { data: dailyOpsCountData } = useQuery({
+    queryKey: ['organization-daily-ops-count', id],
+    queryFn: () => organizationsAPI.getDailyOperationsCount(id),
+    enabled: !!id,
+  });
+
+  // Fetch daily operations totals
+  const { data: dailyOpsTotalsData } = useQuery({
+    queryKey: ['organization-daily-ops-totals', id],
+    queryFn: () => organizationsAPI.getDailyOperationsTotals(id),
+    enabled: !!id,
+  });
+
   const organization = data?.data?.organization;
   const employeesCount = employeesCountData?.data?.count || 0;
   const employeesTotals = employeesTotalsData?.data?.totals;
+  const dailyOpsCount = dailyOpsCountData?.data?.count || 0;
+  const dailyOpsTotals = dailyOpsTotalsData?.data?.totals;
 
   if (isLoading) {
     return (
@@ -194,6 +210,48 @@ export const OrganizationDetailPage = () => {
 
         {/* Quick Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Daily Operations Card */}
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <span className="text-green-600">�</span>
+                  العمليات اليومية
+                </h3>
+                <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
+                  {dailyOpsCount}
+                </span>
+              </div>
+
+              {/* Daily Operations Quick Stats */}
+              {dailyOpsTotals && (
+                <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">إجمالي الإيرادات</span>
+                    <span className="font-semibold text-green-600">{formatCurrency(dailyOpsTotals.totalRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">إجمالي المصروفات</span>
+                    <span className="font-semibold text-red-600">{formatCurrency(dailyOpsTotals.totalExpenses)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
+                    <span className="text-gray-600 font-medium">صافي المبلغ</span>
+                    <span className={`font-bold ${dailyOpsTotals.netAmount >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                      {formatCurrency(dailyOpsTotals.netAmount)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                className="w-full"
+                onClick={() => navigate(`/organizations/${id}/daily-operations`)}
+              >
+                عرض العمليات اليومية →
+              </Button>
+            </div>
+          </Card>
+
           {/* Employees Card */}
           <Card>
             <div className="p-6">
@@ -215,8 +273,16 @@ export const OrganizationDetailPage = () => {
                     <span className="font-semibold">{formatCurrency(employeesTotals.totalRequested)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">الإيرادات</span>
+                    <span className="text-gray-600">إجمالي الإيرادات</span>
                     <span className="font-semibold text-green-600">{formatCurrency(employeesTotals.totalRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">إجمالي المصروفات</span>
+                    <span className="font-semibold text-red-600">{formatCurrency(employeesTotals.totalExpenses)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">صافي الإيرادات</span>
+                    <span className="font-semibold text-blue-600">{formatCurrency(employeesTotals.totalRevenueRemaining)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">المتبقي</span>
@@ -233,39 +299,13 @@ export const OrganizationDetailPage = () => {
               </Button>
             </div>
           </Card>
-
-          {/* Daily Operations Card */}
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <span className="text-green-600">📊</span>
-                  العمليات اليومية
-                </h3>
-                <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
-                  قريباً
-                </span>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4">
-                إدارة العمليات اليومية للمنظمة، تسجيل الإيرادات والمصروفات، ومتابعة الحركة المالية.
-              </p>
-
-              <Button 
-                className="w-full"
-                onClick={() => navigate(`/organizations/${id}/daily-operations`)}
-              >
-                عرض العمليات اليومية →
-              </Button>
-            </div>
-          </Card>
         </div>
 
         {/* Action Buttons */}
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">إجراءات سريعة</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Button 
                 variant="secondary"
                 onClick={() => navigate(`/employees/add?organizationId=${id}`)}
@@ -274,11 +314,10 @@ export const OrganizationDetailPage = () => {
               </Button>
               <Button 
                 variant="secondary"
-                onClick={() => navigate(`/organizations/${id}/daily-operations/add`)}
+                onClick={() => navigate(`/daily-operations/add?organizationId=${id}`)}
               >
                 + تسجيل عملية يومية
               </Button>
-            
             </div>
           </div>
         </Card>

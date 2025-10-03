@@ -40,7 +40,7 @@ export const AddOrganizationPage = () => {
       queryClient.invalidateQueries(['organizations']);
       setToast({ visible: true, message: 'تم إضافة المنظمة بنجاح', type: 'success' });
       setTimeout(() => {
-        navigate('/organizations');
+        navigate('/organizations', { replace: true });
       }, 1500);
     },
     onError: (error) => {

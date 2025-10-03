@@ -441,6 +441,23 @@ const getEmployeesExpiringSoon = catchAsync(
     }
 );
   
+const getOrgEmployeesNamesAndIds = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid organization ID format", 400));
+  }
+
+  const employees = await Employee.find({ organization: id })
+    .select('_id name')
+    .sort({ name: 1 });
+
+  res.status(200).json({
+    status: "success",
+    results: employees.length,
+    data: { employees },
+  });
+});
+
   
 
 
@@ -458,4 +475,5 @@ export default {
   getEmployeesExpiringSoon,
   getOrgEmployeesTotals,
   getOrgEmployeesCount,
+  getOrgEmployeesNamesAndIds,
 };
