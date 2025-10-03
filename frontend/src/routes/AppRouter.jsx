@@ -11,9 +11,6 @@ const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear her
 
 const AddOrganizationPage = () => <div><h1>Add Organization</h1><p>Add organization form will appear here</p></div>;
 
-const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
-const AddEmployeePage = () => <div><h1>Add Employee</h1><p>Add employee form will appear here</p></div>;
-
 const DailyOperationsPage = () => <div><h1>Daily Operations Page</h1><p>List of daily operations will appear here</p></div>;
 const AddDailyOperationPage = () => <div><h1>Add Daily Operation</h1><p>Add daily operation form will appear here</p></div>;
 
@@ -44,10 +41,6 @@ export const AppRouter = () => {
           {/* Organizations */}
           <Route path="/organizations" element={<OrganizationsPage />} />
           <Route path="/organizations/add" element={<AddOrganizationPage />} />
-          
-          {/* Employees */}
-          <Route path="/employees" element={<EmployeesPage />} />
-          <Route path="/employees/add" element={<AddEmployeePage />} />
           
           {/* Daily Operations */}
           <Route path="/daily-operations" element={<DailyOperationsPage />} />

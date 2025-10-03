@@ -4,9 +4,9 @@ import { t } from '../../utils/translations';
 export const DashboardPage = () => {
   const stats = [
     { title: t('dashboard.totalOrganizations'), value: '24', icon: '🏢', color: 'bg-blue-500' },
-    { title: t('dashboard.totalEmployees'), value: '156', icon: '👨‍💼', color: 'bg-green-500' },
-    { title: t('dashboard.dailyOperations'), value: '43', icon: '📝', color: 'bg-amber-500' },
-    { title: t('dashboard.activeUsers'), value: '12', icon: '👥', color: 'bg-purple-500' },
+    { title: t('dashboard.dailyOperations'), value: '43', icon: '�', color: 'bg-amber-500' },
+    { title: t('dashboard.activeUsers'), value: '12', icon: '�', color: 'bg-purple-500' },
+    { title: t('dashboard.officeOperations'), value: '28', icon: '🏭', color: 'bg-green-500' },
   ];
 
   return (

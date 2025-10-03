@@ -8,7 +8,6 @@ export const Sidebar = () => {
     { path: '/dashboard', label: t('nav.dashboard'), icon: '📊' },
     { path: '/users', label: t('nav.users'), icon: '👥' },
     { path: '/organizations', label: t('nav.organizations'), icon: '🏢' },
-    { path: '/employees', label: t('nav.employees'), icon: '👨‍💼' },
     { path: '/daily-operations', label: t('nav.dailyOperations'), icon: '📝' },
     { path: '/office-operations', label: t('nav.officeOperations'), icon: '🏭' },
     { path: '/saudization', label: t('nav.saudization'), icon: '🇸🇦' },

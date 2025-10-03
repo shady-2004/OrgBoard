@@ -17,6 +17,12 @@ export const translations = {
     success: 'نجح',
     confirm: 'تأكيد',
     close: 'إغلاق',
+    previous: 'السابق',
+    next: 'التالي',
+    page: 'صفحة',
+    of: 'من',
+    showing: 'عرض',
+    total: 'إجمالي',
   },
 
   // Auth
@@ -49,7 +55,6 @@ export const translations = {
     dashboard: 'لوحة التحكم',
     users: 'المستخدمون',
     organizations: 'المنظمات',
-    employees: 'الموظفون',
     dailyOperations: 'العمليات اليومية',
     officeOperations: 'عمليات المكتب',
     saudization: 'السعودة',
@@ -63,8 +68,8 @@ export const translations = {
     title: 'لوحة التحكم',
     subtitle: 'مرحباً بك في نظام إدارة المنظمات',
     totalOrganizations: 'إجمالي المنظمات',
-    totalEmployees: 'إجمالي الموظفين',
     dailyOperations: 'العمليات اليومية',
+    officeOperations: 'عمليات المكتب',
     activeUsers: 'المستخدمون النشطون',
     recentActivities: 'الأنشطة الأخيرة',
     noRecentActivities: 'لا توجد أنشطة حديثة',
@@ -79,6 +84,7 @@ export const translations = {
     nationalId: 'رقم الهوية الوطنية',
     commercialRecord: 'السجل التجاري',
     sponsorAmount: 'مبلغ الكفالة',
+    transferredAmount: 'المبلغ المحول للكفيل',
     actions: 'الإجراءات',
     noOrganizations: 'لا توجد منظمات',
     loadingOrganizations: 'جاري تحميل المنظمات...',
@@ -97,20 +103,6 @@ export const translations = {
     status: 'الحالة',
     actions: 'الإجراءات',
     noUsers: 'لا يوجد مستخدمون',
-  },
-
-  // Employees
-  employees: {
-    title: 'الموظفون',
-    subtitle: 'إدارة الموظفين',
-    addEmployee: '+ إضافة موظف',
-    name: 'الاسم',
-    position: 'المنصب',
-    department: 'القسم',
-    nationality: 'الجنسية',
-    salary: 'الراتب',
-    actions: 'الإجراءات',
-    noEmployees: 'لا يوجد موظفون',
   },
 
   // Daily Operations

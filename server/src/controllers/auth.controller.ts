@@ -138,6 +138,23 @@ const changePassword = catchAsync(
   }
 );
 
+const me = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  // Get user from req (set by protect middleware)
+  const userId = req.user?.id;
 
+  // Check if user exists
+  const currentUser = await User.findById(userId).select("-password");
+  if (!currentUser) {
+    return next(new AppError("User not found", 404));
+  }
 
-export default { login, signUp , changePassword };
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: currentUser,
+    },
+  });
+}
+);
+
+export default { login, signUp , changePassword , me };

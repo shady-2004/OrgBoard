@@ -1,8 +1,14 @@
 import api from './axios';
 
 export const organizationsAPI = {
-  getAll: async () => {
-    const { data } = await api.get('/organizations');
+  getAll: async (params = {}) => {
+    const { page = 1, limit = 10, name = '' } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(name && { name }),
+    });
+    const { data } = await api.get(`/organizations?${queryParams}`);
     return data;
   },
 
