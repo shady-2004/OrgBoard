@@ -10,6 +10,7 @@ const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear her
 const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear here</p></div>;
 
 const AddOrganizationPage = () => <div><h1>Add Organization</h1><p>Add organization form will appear here</p></div>;
+const EditOrganizationPage = () => <div><h1>Edit Organization</h1><p>Edit organization form will appear here</p></div>;
 
 const DailyOperationsPage = () => <div><h1>Daily Operations Page</h1><p>List of daily operations will appear here</p></div>;
 const AddDailyOperationPage = () => <div><h1>Add Daily Operation</h1><p>Add daily operation form will appear here</p></div>;
@@ -41,6 +42,7 @@ export const AppRouter = () => {
           {/* Organizations */}
           <Route path="/organizations" element={<OrganizationsPage />} />
           <Route path="/organizations/add" element={<AddOrganizationPage />} />
+          <Route path="/organizations/edit/:id" element={<EditOrganizationPage />} />
           
           {/* Daily Operations */}
           <Route path="/daily-operations" element={<DailyOperationsPage />} />

@@ -23,6 +23,7 @@ export const translations = {
     of: 'من',
     showing: 'عرض',
     total: 'إجمالي',
+    actions: 'الإجراءات',
   },
 
   // Auth
