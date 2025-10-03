@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import AppError from "../utils/AppError";
 import { Response, Request, NextFunction } from "express";
 import { UserPayload } from "../middlewares/protect";
-import { loginSchema, signupSchema } from "../validations/user.validation";
+import { changePasswordSchema, loginSchema, signupSchema } from "../validations/user.validation";
 
 export const signToken = (id: string): string => {
   const jwtSecret = process.env.JWT_SECRET as string;
@@ -74,7 +74,7 @@ const signUp = catchAsync(
       return next(new AppError(result.error.message, 400));
     }
 
-    const { email, password, role = "user" } = result.data;
+    const { email, password } = result.data;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -86,7 +86,7 @@ const signUp = catchAsync(
     const docUser = await User.create({
       email,
       password,
-      role,
+      role:'admin',
     });
 
     // Build payload
@@ -102,18 +102,20 @@ const signUp = catchAsync(
 const changePassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // Validate request body
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return next(
-        new AppError("Current password and new password are required", 400)
-      );
+
+    const result = changePasswordSchema.safeParse(req.body);
+    if (!result.success) {
+      return next(new AppError(result.error.message, 400));
     }
+    const { currentPassword, newPassword } = result.data;
+
+    console.log(currentPassword,newPassword)
 
     // Get user from req (set by protect middleware)
     const userId = req.user?.id;
 
     // Check if user exists
-    const currentUser = await User.findById(userId);
+    const currentUser = await User.findById(userId).select("+password");
     if (!currentUser) {
       return next(new AppError("User not found", 404));
     }
@@ -135,5 +137,7 @@ const changePassword = catchAsync(
     createSendToken(userPayload, 200, res);
   }
 );
+
+
 
 export default { login, signUp , changePassword };
