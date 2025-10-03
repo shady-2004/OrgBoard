@@ -2,11 +2,11 @@ import api from './axios';
 
 export const organizationsAPI = {
   getAll: async (params = {}) => {
-    const { page = 1, limit = 10, name = '' } = params;
+    const { page = 1, limit = 10, ownerName = '' } = params;
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(name && { name }),
+      ...(ownerName && { ownerName }),
     });
     const { data } = await api.get(`/organizations?${queryParams}`);
     return data;
@@ -37,13 +37,24 @@ export const organizationsAPI = {
     return data;
   },
 
-  getEmployees: async (id) => {
-    const { data } = await api.get(`/organizations/${id}/employees`);
+  getEmployees: async (id, params = {}) => {
+    const { page = 1, limit = 10, search = '' } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+    });
+    const { data } = await api.get(`/organizations/${id}/employees?${queryParams}`);
     return data;
   },
 
   getEmployeesTotals: async (id) => {
     const { data } = await api.get(`/organizations/${id}/employees/totals`);
+    return data;
+  },
+
+  getEmployeesCount: async (id) => {
+    const { data } = await api.get(`/organizations/${id}/employees/count`);
     return data;
   },
 

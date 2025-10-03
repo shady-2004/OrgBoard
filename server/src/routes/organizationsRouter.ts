@@ -13,5 +13,6 @@ organizationsRouter.get("/:id", organizationController.getOrganizationById);
 organizationsRouter.get("/names/ids", organizationController.getNamesAndIds);
 organizationsRouter.get("/:id/employees", employeeController.getAllOrgizationEmployees);
 organizationsRouter.get("/:id/employees/totals", employeeController.getOrgEmployeesTotals);
+organizationsRouter.get("/:id/employees/count", employeeController.getOrgEmployeesCount);
 organizationsRouter.get("/:id/daily-operations", dailyOperationController.getAllOrgizationDailyOperations);
 export default organizationsRouter;

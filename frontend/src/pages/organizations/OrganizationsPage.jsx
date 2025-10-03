@@ -4,9 +4,11 @@ import { organizationsAPI } from '../../api/organizations';
 import { Button } from '../../components/ui/Button';
 import { Toast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { SearchBar } from '../../components/ui/SearchBar';
 import { Table } from '../../components/tables/Table';
 import { Pagination } from '../../components/tables/Pagination';
 import { useNavigate } from 'react-router-dom';
+import { useDebounce } from '../../hooks/useDebounce';
 import { t } from '../../utils/translations';
 
 export const OrganizationsPage = () => {
@@ -14,6 +16,7 @@ export const OrganizationsPage = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
@@ -25,9 +28,12 @@ export const OrganizationsPage = () => {
     orgName: '' 
   });
   
+  // Debounce search input using custom hook
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  
   const { data, isLoading, error } = useQuery({
-    queryKey: ['organizations', page, limit],
-    queryFn: () => organizationsAPI.getAll({ page, limit }),
+    queryKey: ['organizations', page, limit, debouncedSearch],
+    queryFn: () => organizationsAPI.getAll({ page, limit, ownerName: debouncedSearch }),
     keepPreviousData: true,
   });
 
@@ -102,6 +108,19 @@ export const OrganizationsPage = () => {
           </Button>
         </div>
 
+        {/* Search Bar - Reusable Component */}
+        <SearchBar
+          value={searchTerm}
+          onChange={(value) => {
+            setSearchTerm(value);
+            setPage(1); // Reset to page 1 when search changes
+          }}
+          placeholder="ابحث عن منظمة بالاسم..."
+          showResults={!!debouncedSearch}
+          resultsText={debouncedSearch}
+          resultsCount={data?.pagination?.total}
+        />
+
         {/* Table with columns definition */}
         <Table
           onRowClick={handleRowClick}
@@ -122,19 +141,17 @@ export const OrganizationsPage = () => {
               className: 'text-gray-600',
             },
             {
-              label: t('organizations.sponsorAmount'),
-              key: 'sponsorAmount',
+              label: t('organizations.absherCode'),
+              key: 'absherCode',
               className: 'text-gray-900',
-              render: (row, value) => (
-                <>{value?.toLocaleString('ar-SA')} {t('organizations.sar')}</>
-              ),
+            
             },
             {
-              label: t('organizations.transferredAmount'),
-              key: 'transferredToSponsorTotal',
-              className: 'text-green-600 font-semibold',
+              label: t('organizations.birthDate'),
+              key: 'birthDate',
+              className: 'text-gray-600',
               render: (row, value) => (
-                <>{value?.toLocaleString('ar-SA')} {t('organizations.sar')}</>
+                <>{value ? new Date(value).toLocaleDateString('ar-SA') : '-'}</>
               ),
             },
             {

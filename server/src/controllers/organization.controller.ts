@@ -31,38 +31,28 @@ const getAllOrganizations = catchAsync(async (req: Request, res: Response, next:
   const skip = (page - 1) * limit;
 
   // Filtering
-  const nameSearch = req.query.name ? String(req.query.name).trim() : null;
+  const ownerNameSearch = req.query.ownerName ? String(req.query.ownerName).trim() : null;
   const filter: any = {};
-  if (nameSearch) {
-    filter.ownerName = { $regex: `\\b${nameSearch}\\b`, $options: "i" };
+  if (ownerNameSearch) {
+    filter.ownerName = { $regex: ownerNameSearch, $options: "i" };
   }
 
   // Count total orgs
   const totalOrganizations = await Organization.countDocuments(filter);
 
-  // Aggregation: fetch orgs + join with DailyOrganizationOperation + sum amounts
+  // Aggregation: fetch orgs only
   const organizations = await Organization.aggregate([
     { $match: filter },
     { $skip: skip },
     { $limit: limit },
     {
-      $lookup: {
-        from: "dailyorganizationoperations", // collection name in MongoDB
-        localField: "_id",
-        foreignField: "organization",
-        as: "operations",
-      },
-    },
-    {
-      $addFields: {
-        transferredToSponsorTotal: { $sum: "$operations.amount" },
-      },
-    },
-    {
       $project: {
-        __v: 0,
-        operations: 0, // hide operations array, keep only the total
-        
+        ownerName: 1,
+        nationalId: 1,
+        absherCode: 1,
+        birthDate: 1,
+        commercialRecordNumber: 1,
+        _id: 1
       },
     },
   ]);
@@ -87,6 +77,7 @@ const getAllOrganizations = catchAsync(async (req: Request, res: Response, next:
     },
   });
 });
+
 
 
 const deleteOrganization = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

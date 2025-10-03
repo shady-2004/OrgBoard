@@ -86,6 +86,8 @@ export const translations = {
     commercialRecord: 'السجل التجاري',
     sponsorAmount: 'مبلغ الكفالة',
     transferredAmount: 'المبلغ المحول للكفيل',
+    absherCode: 'كود أبشر',
+    birthDate: 'تاريخ الميلاد',
     actions: 'الإجراءات',
     noOrganizations: 'لا توجد منظمات',
     loadingOrganizations: 'جاري تحميل المنظمات...',

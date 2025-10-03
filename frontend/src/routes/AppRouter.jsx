@@ -5,6 +5,8 @@ import { RegisterPage } from '../pages/auth/RegisterPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { OrganizationDetailPage } from '../pages/organizations/OrganizationDetailPage';
+import { OrganizationEmployeesPage } from '../pages/organizations/OrganizationEmployeesPage';
+import { OrganizationDailyOperationsPage } from '../pages/organizations/OrganizationDailyOperationsPage';
 import { AddOrganizationPage } from '../pages/organizations/AddOrganizationPage';
 
 // Placeholder pages
@@ -45,6 +47,8 @@ export const AppRouter = () => {
           <Route path="/organizations/add" element={<AddOrganizationPage />} />
           <Route path="/organizations/edit/:id" element={<EditOrganizationPage />} />
           <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
+          <Route path="/organizations/:id/employees" element={<OrganizationEmployeesPage />} />
+          <Route path="/organizations/:id/daily-operations" element={<OrganizationDailyOperationsPage />} />
           
           {/* Daily Operations */}
           <Route path="/daily-operations" element={<DailyOperationsPage />} />
