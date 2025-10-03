@@ -4,7 +4,7 @@ import rateLimit from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
 import router from "./routes/routes";
-import globalErrorHanlder from "./controllers/errorController";
+import globalErrorHanlder from "./controllers/error.controller";
 import cookieParser from "cookie-parser";
 
 const app = express();

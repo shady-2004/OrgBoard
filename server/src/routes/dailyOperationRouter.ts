@@ -1,5 +1,5 @@
 import{ Router } from "express";
-import dailyOperationsController from "../controllers/dailyOperationController";
+import dailyOperationsController from "../controllers/dailyOperation.controller";
 const dailyOperationsRouter = Router();
 
 dailyOperationsRouter.post("/", dailyOperationsController.createDailyOperation);

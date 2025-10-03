@@ -7,17 +7,20 @@ import employeesRouter from "./employeesRouter";
 import dailyOperationsRouter from "./dailyOperationRouter";
 import userRouter from "./users";
 import organizationDailyOperationRouter from "./organizationDailyOperationRouter";
+import authRouter from "./authRouter";
+import protect from "../middlewares/protect";
 
 const router = Router();
 
 // Mount all routers
-router.use('/users',userRouter)
-router.use('/organizations', organizationsRouter);
-router.use('/employees', employeesRouter);
-router.use('/daily-operations', dailyOperationsRouter);
-router.use('/organization-daily-operations', organizationDailyOperationRouter);
-router.use('/office-operations', officeOperationsRouter);
-router.use('/saudization', saudizationRouter);
-router.use('/settings', settingsRouter);
+router.use('/auth', authRouter);
+router.use('/users',protect,userRouter)
+router.use('/organizations',protect, organizationsRouter);
+router.use('/employees', protect, employeesRouter);
+router.use('/daily-operations', protect, dailyOperationsRouter);
+router.use('/organization-daily-operations', protect, organizationDailyOperationRouter);
+router.use('/office-operations', protect, officeOperationsRouter);
+router.use('/saudization', protect, saudizationRouter);
+router.use('/settings', protect, settingsRouter);
 
 export default router;

@@ -1,7 +1,12 @@
 import { z } from "zod";
+import { Types } from "mongoose";
+
+const objectId = z
+  .string()
+  .refine((val) => Types.ObjectId.isValid(val), { message: "Invalid Organization ObjectId" });
 
 export const saudaizationZodSchema = z.object({
-  organization: z.string().min(1, "Organization is required"),
+  organization: objectId, // ✅ now requires a valid MongoDB ObjectId
 
   date: z
     .preprocess((val) => (val ? new Date(val as string) : new Date()), z.date())
@@ -15,15 +20,13 @@ export const saudaizationZodSchema = z.object({
     .max(100, "Employee name cannot exceed 100 characters")
     .regex(/^[\p{L}\s.'-]+$/u, "Employee name contains invalid characters"),
 
-  workPermitStatus: z.enum(["pending", "issue_problem", "issued"]).refine(
-    (val) => ["pending", "issue_problem", "issued"].includes(val),
-    { message: "Work permit status must be pending, issue_problem, or issued" }
-  ),
+  workPermitStatus: z.enum(["pending", "issue_problem", "issued"], {
+    error: "Work permit status is required",
+  }),
 
-  deportationStatus: z.enum(["deported", "pending"]).refine(
-    (val) => ["deported", "pending"].includes(val),
-    { message: "Deportation status must be deported or pending" }
-  ),
+  deportationStatus: z.enum(["deported", "pending"], {
+    error: "Deportation status is required",
+  }),
 
   deportationDate: z
     .preprocess((val) => (val ? new Date(val as string) : undefined), z.date().optional())

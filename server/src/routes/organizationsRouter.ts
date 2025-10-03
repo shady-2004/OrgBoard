@@ -1,7 +1,7 @@
 import{ Router } from "express";
-import organizationController from "../controllers/organizationController";
-import employeeController from "../controllers/employeeController";
-import dailyOperationController from "../controllers/dailyOperationController";
+import organizationController from "../controllers/organization.controller";
+import employeeController from "../controllers/employee.controller";
+import dailyOperationController from "../controllers/dailyOperation.controller";
 const organizationsRouter = Router();
 
 
