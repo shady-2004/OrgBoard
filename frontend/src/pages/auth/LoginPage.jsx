@@ -19,6 +19,8 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     setError('');
     setLoading(true);
 
@@ -26,7 +28,9 @@ export const LoginPage = () => {
       await login(formData);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || t('auth.loginFailed'));
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.message || err.message || t('auth.loginFailed');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

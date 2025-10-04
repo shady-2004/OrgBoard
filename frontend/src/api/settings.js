@@ -1,6 +1,11 @@
 import api from './axios';
 
 export const settingsAPI = {
+  changePassword: async (passwordData) => {
+    const { data } = await api.patch('/auth/update-password', passwordData);
+    return data;
+  },
+
   getAll: async () => {
     const { data } = await api.get('/settings');
     return data;

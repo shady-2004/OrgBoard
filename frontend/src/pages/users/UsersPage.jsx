@@ -14,8 +14,15 @@ export const UsersPage = () => {
   const [email, setEmail] = useState('');
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   
-  // Confirm dialog state
+  // Confirm dialog state for delete
   const [confirmDialog, setConfirmDialog] = useState({ 
+    isOpen: false, 
+    userId: null, 
+    userEmail: '' 
+  });
+  
+  // Confirm dialog state for reset password
+  const [resetPasswordDialog, setResetPasswordDialog] = useState({ 
     isOpen: false, 
     userId: null, 
     userEmail: '' 
@@ -67,6 +74,28 @@ export const UsersPage = () => {
     },
   });
 
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: usersAPI.resetPassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+      setResetPasswordDialog({ isOpen: false, userId: null, userEmail: '' });
+      setToast({ 
+        visible: true, 
+        message: 'تم إعادة تعيين كلمة المرور إلى: 12345678', 
+        type: 'success' 
+      });
+    },
+    onError: (error) => {
+      setResetPasswordDialog({ isOpen: false, userId: null, userEmail: '' });
+      setToast({ 
+        visible: true, 
+        message: `فشل في إعادة تعيين كلمة المرور: ${error.response?.data?.message || error.message}`, 
+        type: 'error' 
+      });
+    },
+  });
+
   const handleAddUser = (e) => {
     e.preventDefault();
     if (!email.trim()) {
@@ -83,6 +112,16 @@ export const UsersPage = () => {
   const confirmDelete = () => {
     if (confirmDialog.userId) {
       deleteMutation.mutate(confirmDialog.userId);
+    }
+  };
+
+  const handleResetPassword = (userId, userEmail) => {
+    setResetPasswordDialog({ isOpen: true, userId, userEmail });
+  };
+
+  const confirmResetPassword = () => {
+    if (resetPasswordDialog.userId) {
+      resetPasswordMutation.mutate(resetPasswordDialog.userId);
     }
   };
 
@@ -182,6 +221,19 @@ export const UsersPage = () => {
         </div>
       )}
 
+      {/* Reset Password Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={resetPasswordDialog.isOpen}
+        onClose={() => setResetPasswordDialog({ isOpen: false, userId: null, userEmail: '' })}
+        onConfirm={confirmResetPassword}
+        title="تأكيد إعادة تعيين كلمة المرور"
+        message={`هل أنت متأكد من إعادة تعيين كلمة المرور للمستخدم "${resetPasswordDialog.userEmail}"؟ سيتم تعيينها إلى: 12345678`}
+        confirmText="إعادة تعيين"
+        cancelText="إلغاء"
+        confirmVariant="secondary"
+        isLoading={resetPasswordMutation.isPending}
+      />
+
       {/* Users Table */}
       <Card>
         <div className="overflow-x-auto">
@@ -231,6 +283,13 @@ export const UsersPage = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleResetPassword(user._id, user.email)}
+                        >
+                          🔑 إعادة تعيين كلمة المرور
+                        </Button>
                         <Button
                           size="sm"
                           variant="danger"

@@ -82,5 +82,31 @@ const removeUser = catchAsync(
   }
 );
 
+const resetUserPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
 
-export default { addUser, getAllUsers, removeUser };
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return next(new AppError("Invalid user ID format", 400));
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return next(new AppError("No user found with that ID", 404));
+    }
+
+    // Reset to default password "12345678"
+    const defaultPassword = "12345678";
+    user.password = defaultPassword;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Password reset to default: 12345678",
+    });
+  }
+);
+
+
+export default { addUser, getAllUsers, removeUser, resetUserPassword };

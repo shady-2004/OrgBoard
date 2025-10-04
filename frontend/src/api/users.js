@@ -25,4 +25,9 @@ export const usersAPI = {
     const { data} = await api.delete(`/users/${id}`);
     return data;
   },
+
+  resetPassword: async (id) => {
+    const { data } = await api.patch(`/users/${id}/reset-password`);
+    return data;
+  },
 };

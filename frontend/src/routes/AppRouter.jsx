@@ -24,11 +24,10 @@ import { SaudizationPage } from '../pages/saudization/SaudizationPage';
 import { AddSaudizationPage } from '../pages/saudization/AddSaudizationPage';
 import { EditSaudizationPage } from '../pages/saudization/EditSaudizationPage';
 import { UsersPage } from '../pages/users/UsersPage';
+import { SettingsPage } from '../pages/settings/SettingsPage';
 
 // Placeholder pages
 const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
-
-const SettingsPage = () => <div><h1>Settings Page</h1><p>Settings options will appear here</p></div>;
 
 export const AppRouter = () => {
   return (

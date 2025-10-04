@@ -33,10 +33,21 @@ api.interceptors.response.use(
   (error) => {
     console.error('❌ API Error:', error.config?.url, error.response?.status, error.message);
     console.error('Error details:', error.response?.data);
+    
+    // Only redirect to login if:
+    // 1. Status is 401
+    // 2. We're not already on the login or register page
+    // 3. The error is not from the login endpoint itself
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/register';
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      
+      if (!isLoginPage && !isLoginRequest) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
+    
     return Promise.reject(error);
   }
 );
