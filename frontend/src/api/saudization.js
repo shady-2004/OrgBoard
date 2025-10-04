@@ -1,8 +1,8 @@
 import api from './axios';
 
 export const saudizationAPI = {
-  getAll: async () => {
-    const { data } = await api.get('/saudization');
+  getAll: async (params = {}) => {
+    const { data } = await api.get('/saudization', { params });
     return data;
   },
 
@@ -11,38 +11,18 @@ export const saudizationAPI = {
     return data;
   },
 
-  getCompliance: async () => {
-    const { data } = await api.get('/saudization/compliance');
+  getById: async (id) => {
+    const { data } = await api.get(`/saudization/${id}`);
     return data;
   },
 
-  getReports: async () => {
-    const { data } = await api.get('/saudization/reports');
+  update: async (id, saudizationData) => {
+    const { data } = await api.patch(`/saudization/${id}`, saudizationData);
     return data;
   },
 
-  getTargets: async () => {
-    const { data } = await api.get('/saudization/targets');
-    return data;
-  },
-
-  updateTargets: async (targetsData) => {
-    const { data } = await api.put('/saudization/targets', targetsData);
-    return data;
-  },
-
-  getStatistics: async () => {
-    const { data } = await api.get('/saudization/statistics');
-    return data;
-  },
-
-  getQuotas: async () => {
-    const { data } = await api.get('/saudization/quotas');
-    return data;
-  },
-
-  updateQuotas: async (quotasData) => {
-    const { data } = await api.put('/saudization/quotas', quotasData);
+  delete: async (id) => {
+    const { data } = await api.delete(`/saudization/${id}`);
     return data;
   },
 };

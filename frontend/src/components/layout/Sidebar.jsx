@@ -1,17 +1,27 @@
 import { Link, useLocation } from 'react-router-dom';
 import { t } from '../../utils/translations';
+import { useAuth } from '../../hooks/useAuth';
 
 export const Sidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const menuItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: '📊' },
     { path: '/organizations', label: t('nav.organizations'), icon: '🏢' },
     { path: '/office-operations', label: t('nav.officeOperations'), icon: '🏭' },
     { path: '/saudization', label: t('nav.saudization'), icon: '🇸🇦' },
-    { path: '/users', label: t('nav.users'), icon: '👥' },
+    { path: '/users', label: t('nav.users'), icon: '👥', adminOnly: true },
     { path: '/settings', label: t('nav.settings'), icon: '⚙️' },
   ];
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.adminOnly) {
+      return user?.role === 'admin';
+    }
+    return true;
+  });
 
   return (
     <aside className="fixed top-0 right-0 h-screen w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-lg">
@@ -20,7 +30,7 @@ export const Sidebar = () => {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link

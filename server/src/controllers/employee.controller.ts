@@ -363,6 +363,7 @@ const getEmployeesWithExpiredResidence = catchAsync(
         .sort({ residencePermitExpiry: -1 }) 
         .skip(skip)
         .limit(limit)
+        .populate('organization', 'ownerName')
         .select("-__v");
   
   
@@ -417,6 +418,7 @@ const getEmployeesExpiringSoon = catchAsync(
         .sort({ residencePermitExpiry: 1 })
         .skip(skip)
         .limit(limit)
+        .populate('organization', 'ownerName')
         .select("-__v");
   
      

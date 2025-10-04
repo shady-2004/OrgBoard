@@ -4,6 +4,7 @@ import AppError from "../utils/AppError";
 import { saudaizationZodSchema } from "../validations/saudization.validation";
 import Saudaization from "../models/saudizationModel";
 import Organization from "../models/organizationModel";
+
 const createSaudizationRecord = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
 
@@ -45,6 +46,7 @@ const deleteSaudizationRecord = catchAsync(async (req: Request, res: Response, n
         data: null
     });
 });
+
 const updateSaudizationRecord = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
     const { id } = req.params;
@@ -75,6 +77,7 @@ const updateSaudizationRecord = catchAsync(async (req: Request, res: Response, n
         }
     });
 });
+
 const getSaudizationRecord = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -91,6 +94,7 @@ const getSaudizationRecord = catchAsync(async (req: Request, res: Response, next
         }
     });
 });
+
 const getAllSaudizationsRecords = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // Pagination
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
@@ -100,7 +104,7 @@ const getAllSaudizationsRecords = catchAsync(async (req: Request, res: Response,
     const nameSearch = req.query.name ? String(req.query.name).trim() : null;
     const filter: any = {};
     if (nameSearch) {
-      filter.name = { $regex: nameSearch, $options: "i" }; // case-insensitive
+      filter.employeeName = { $regex: nameSearch, $options: "i" };
     }
   
     const total = await Saudaization.countDocuments(filter);
@@ -129,7 +133,7 @@ const getAllSaudizationsRecords = catchAsync(async (req: Request, res: Response,
         saudizations,
       },
     });
-  });
+});
   
 export default {
     createSaudizationRecord,

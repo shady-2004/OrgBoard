@@ -33,10 +33,7 @@ const employeeSchema = new Schema<IEmployee>(
     residencePermitExpiry: {
       type: Date,
       required: [true, "Residence permit expiry date is required"],
-      validate: {
-        validator: (value: Date) => value > new Date(),
-        message: "Residence permit expiry must be in the future",
-      },
+   
     },
     workCardIssueDate: {
       type: Date,

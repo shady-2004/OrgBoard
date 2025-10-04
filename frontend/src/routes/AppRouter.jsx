@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedLayout } from '../components/layout/ProtectedLayout';
+import { AdminRoute } from '../components/layout/AdminRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
@@ -19,15 +20,13 @@ import { EditOrganizationDailyOperationPage } from '../pages/organization-daily-
 import { OfficeOperationsPage } from '../pages/office-operations/OfficeOperationsPage';
 import { AddOfficeOperationPage } from '../pages/office-operations/AddOfficeOperationPage';
 import { EditOfficeOperationPage } from '../pages/office-operations/EditOfficeOperationPage';
+import { SaudizationPage } from '../pages/saudization/SaudizationPage';
+import { AddSaudizationPage } from '../pages/saudization/AddSaudizationPage';
+import { EditSaudizationPage } from '../pages/saudization/EditSaudizationPage';
+import { UsersPage } from '../pages/users/UsersPage';
 
 // Placeholder pages
-const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear here</p></div>;
-const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear here</p></div>;
-
 const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
-
-const SaudizationPage = () => <div><h1>Saudization Page</h1><p>Saudization data will appear here</p></div>;
-const AddSaudizationPage = () => <div><h1>Add Saudization Entry</h1><p>Add saudization form will appear here</p></div>;
 
 const SettingsPage = () => <div><h1>Settings Page</h1><p>Settings options will appear here</p></div>;
 
@@ -43,9 +42,12 @@ export const AppRouter = () => {
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           
-          {/* Users */}
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/add" element={<AddUserPage />} />
+          {/* Users - Admin Only */}
+          <Route path="/users" element={
+            <AdminRoute>
+              <UsersPage />
+            </AdminRoute>
+          } />
           
           {/* Organizations */}
           <Route path="/organizations" element={<OrganizationsPage />} />
@@ -77,6 +79,7 @@ export const AppRouter = () => {
           {/* Saudization */}
           <Route path="/saudization" element={<SaudizationPage />} />
           <Route path="/saudization/add" element={<AddSaudizationPage />} />
+          <Route path="/saudization/edit/:id" element={<EditSaudizationPage />} />
           
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />
