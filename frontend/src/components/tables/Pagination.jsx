@@ -13,6 +13,7 @@ import { t } from '../../utils/translations';
  * @param {Boolean} props.hasNext - Has next page
  * @param {Boolean} props.hasPrevious - Has previous page
  * @param {String} props.itemLabel - Label for items (e.g., 'منظمة', 'مستخدم')
+ * @param {Boolean} props.compact - Use compact layout for smaller spaces
  */
 export const Pagination = ({
   currentPage,
@@ -25,6 +26,7 @@ export const Pagination = ({
   itemLabel = 'عنصر',
   showPageNumbers = true,
   maxPageButtons = 5,
+  compact = false,
 }) => {
   if (!totalPages || totalPages <= 1) return null;
 
@@ -47,6 +49,39 @@ export const Pagination = ({
   };
 
   const pageNumbers = getPageNumbers();
+
+  // Compact layout for dashboard and smaller spaces
+  if (compact) {
+    return (
+      <div className="flex items-center justify-between text-sm">
+        <div className="text-gray-600">
+          <span className="font-semibold">{currentPage}</span>
+          <span className="mx-1">/</span>
+          <span>{totalPages}</span>
+          <span className="mx-2">·</span>
+          <span>{totalItems} {itemLabel}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={!hasPrevious}
+          >
+            السابق
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={!hasNext}
+          >
+            التالي
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">

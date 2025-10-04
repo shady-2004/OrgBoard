@@ -7,9 +7,14 @@ import { formatDate } from '../../utils/formatDate';
 import { SimpleBarChart } from '../../components/charts/SimpleBarChart';
 import { SimplePieChart } from '../../components/charts/SimplePieChart';
 import { useNavigate } from 'react-router-dom';
+import { Pagination } from '../../components/tables/Pagination';
+import { useState } from 'react';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
+  const [expiredPage, setExpiredPage] = useState(1);
+  const [nearlyExpiredPage, setNearlyExpiredPage] = useState(1);
+  const limit = 5;
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboardStats'],
@@ -17,13 +22,13 @@ export const DashboardPage = () => {
   });
 
   const { data: expiredData } = useQuery({
-    queryKey: ['expiredEmployees'],
-    queryFn: dashboardAPI.getExpiredEmployees,
+    queryKey: ['expiredEmployees', expiredPage],
+    queryFn: () => dashboardAPI.getExpiredEmployees({ page: expiredPage, limit }),
   });
 
   const { data: nearlyExpiredData } = useQuery({
-    queryKey: ['nearlyExpiredEmployees'],
-    queryFn: dashboardAPI.getNearlyExpiredEmployees,
+    queryKey: ['nearlyExpiredEmployees', nearlyExpiredPage],
+    queryFn: () => dashboardAPI.getNearlyExpiredEmployees({ page: nearlyExpiredPage, limit }),
   });
 
   const { data: activitiesData } = useQuery({
@@ -260,35 +265,52 @@ export const DashboardPage = () => {
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <span className="text-2xl">⚠️</span>
-              موظفون بإقامات منتهية ({expiredEmployees.length})
+              موظفون بإقامات منتهية ({expiredData?.pagination?.total || 0})
             </h3>
             {expiredEmployees.length === 0 ? (
               <p className="text-gray-500 text-center py-4">لا يوجد موظفون بإقامات منتهية</p>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {expiredEmployees.map((employee) => (
-                  <div 
-                    key={employee._id} 
-                    className="flex justify-between items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-800">{employee.name}</div>
-                      <div className="text-sm text-gray-600">
-                        المنظمة: {' '}
-                        <span 
-                          className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
-                          onClick={() => navigate(`/organizations/${employee.organization?._id}`)}
-                        >
-                          {employee.organization?.ownerName || 'غير محدد'}
-                        </span>
+              <>
+                <div className="space-y-2">
+                  {expiredEmployees.map((employee) => (
+                    <div 
+                      key={employee._id} 
+                      className="flex justify-between items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-800">{employee.name}</div>
+                        <div className="text-sm text-gray-600">
+                          المنظمة: {' '}
+                          <span 
+                            className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                            onClick={() => navigate(`/organizations/${employee.organization?._id}`)}
+                          >
+                            {employee.organization?.ownerName || 'غير محدد'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-red-600 font-medium">
+                        {formatDate(employee.residenceExpiryDate)}
                       </div>
                     </div>
-                    <div className="text-sm text-red-600 font-medium">
-                      {formatDate(employee.residenceExpiryDate)}
-                    </div>
+                  ))}
+                </div>
+                {expiredData?.pagination && expiredData.pagination.totalPages > 1 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={expiredPage}
+                      totalPages={expiredData.pagination.totalPages}
+                      totalItems={expiredData.pagination.total}
+                      itemsPerPage={limit}
+                      onPageChange={setExpiredPage}
+                      hasNext={!!expiredData.pagination.next}
+                      hasPrevious={!!expiredData.pagination.previous}
+                      itemLabel="موظف"
+                      compact
+                    />
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </Card>
@@ -297,35 +319,52 @@ export const DashboardPage = () => {
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <span className="text-2xl">⏰</span>
-              موظفون بإقامات قريبة الانتهاء ({nearlyExpiredEmployees.length})
+              موظفون بإقامات قريبة الانتهاء ({nearlyExpiredData?.pagination?.total || 0})
             </h3>
             {nearlyExpiredEmployees.length === 0 ? (
               <p className="text-gray-500 text-center py-4">لا يوجد موظفون بإقامات قريبة الانتهاء</p>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {nearlyExpiredEmployees.map((employee) => (
-                  <div 
-                    key={employee._id} 
-                    className="flex justify-between items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-800">{employee.name}</div>
-                      <div className="text-sm text-gray-600">
-                        المنظمة: {' '}
-                        <span 
-                          className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
-                          onClick={() => navigate(`/organizations/${employee.organization?._id}`)}
-                        >
-                          {employee.organization?.ownerName || 'غير محدد'}
-                        </span>
+              <>
+                <div className="space-y-2">
+                  {nearlyExpiredEmployees.map((employee) => (
+                    <div 
+                      key={employee._id} 
+                      className="flex justify-between items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-800">{employee.name}</div>
+                        <div className="text-sm text-gray-600">
+                          المنظمة: {' '}
+                          <span 
+                            className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                            onClick={() => navigate(`/organizations/${employee.organization?._id}`)}
+                          >
+                            {employee.organization?.ownerName || 'غير محدد'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-orange-600 font-medium">
+                        {formatDate(employee.residenceExpiryDate)}
                       </div>
                     </div>
-                    <div className="text-sm text-orange-600 font-medium">
-                      {formatDate(employee.residenceExpiryDate)}
-                    </div>
+                  ))}
+                </div>
+                {nearlyExpiredData?.pagination && nearlyExpiredData.pagination.totalPages > 1 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={nearlyExpiredPage}
+                      totalPages={nearlyExpiredData.pagination.totalPages}
+                      totalItems={nearlyExpiredData.pagination.total}
+                      itemsPerPage={limit}
+                      onPageChange={setNearlyExpiredPage}
+                      hasNext={!!nearlyExpiredData.pagination.next}
+                      hasPrevious={!!nearlyExpiredData.pagination.previous}
+                      itemLabel="موظف"
+                      compact
+                    />
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </Card>

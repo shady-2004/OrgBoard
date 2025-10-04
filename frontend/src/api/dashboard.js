@@ -7,13 +7,13 @@ export const dashboardAPI = {
   },
 
   // Use existing employee routes for expired/expiring employees
-  getExpiredEmployees: async () => {
-    const { data } = await api.get('/employees/residence/expired');
+  getExpiredEmployees: async (params = {}) => {
+    const { data } = await api.get('/employees/residence/expired', { params });
     return data;
   },
 
-  getNearlyExpiredEmployees: async () => {
-    const { data } = await api.get('/employees/residence/expiring-soon');
+  getNearlyExpiredEmployees: async (params = {}) => {
+    const { data } = await api.get('/employees/residence/expiring-soon', { params });
     return data;
   },
 
