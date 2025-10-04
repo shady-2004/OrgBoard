@@ -132,6 +132,17 @@ export const translations = {
     subtitle: 'إدارة عمليات المكتب',
     addOperation: '+ إضافة عملية',
     noOperations: 'لا توجد عمليات',
+    date: 'التاريخ',
+    type: 'النوع',
+    amount: 'المبلغ',
+    paymentMethod: 'طريقة الدفع',
+    notes: 'الملاحظات',
+    expense: 'مصروف',
+    revenue: 'إيراد',
+    cash: 'نقدي',
+    bank: 'بنكي',
+    credit: 'بطاقة ائتمان',
+    other: 'أخرى',
   },
 
   // Saudization

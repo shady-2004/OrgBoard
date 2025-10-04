@@ -16,15 +16,15 @@ import { EditDailyOperationPage } from '../pages/daily-operations/EditDailyOpera
 import { OrganizationDailyOperationsListPage } from '../pages/organization-daily-operations/OrganizationDailyOperationsListPage';
 import { AddOrganizationDailyOperationPage } from '../pages/organization-daily-operations/AddOrganizationDailyOperationPage';
 import { EditOrganizationDailyOperationPage } from '../pages/organization-daily-operations/EditOrganizationDailyOperationPage';
+import { OfficeOperationsPage } from '../pages/office-operations/OfficeOperationsPage';
+import { AddOfficeOperationPage } from '../pages/office-operations/AddOfficeOperationPage';
+import { EditOfficeOperationPage } from '../pages/office-operations/EditOfficeOperationPage';
 
 // Placeholder pages
 const UsersPage = () => <div><h1>Users Page</h1><p>List of users will appear here</p></div>;
 const AddUserPage = () => <div><h1>Add User</h1><p>Add user form will appear here</p></div>;
 
 const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
-
-const OfficeOperationsPage = () => <div><h1>Office Operations Page</h1><p>List of office operations will appear here</p></div>;
-const AddOfficeOperationPage = () => <div><h1>Add Office Operation</h1><p>Add office operation form will appear here</p></div>;
 
 const SaudizationPage = () => <div><h1>Saudization Page</h1><p>Saudization data will appear here</p></div>;
 const AddSaudizationPage = () => <div><h1>Add Saudization Entry</h1><p>Add saudization form will appear here</p></div>;
@@ -72,6 +72,7 @@ export const AppRouter = () => {
           {/* Office Operations */}
           <Route path="/office-operations" element={<OfficeOperationsPage />} />
           <Route path="/office-operations/add" element={<AddOfficeOperationPage />} />
+          <Route path="/office-operations/edit/:id" element={<EditOfficeOperationPage />} />
           
           {/* Saudization */}
           <Route path="/saudization" element={<SaudizationPage />} />

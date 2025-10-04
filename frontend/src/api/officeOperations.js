@@ -1,8 +1,8 @@
 import api from './axios';
 
 export const officeOperationsAPI = {
-  getAll: async () => {
-    const { data } = await api.get('/office-operations');
+  getAll: async (params = {}) => {
+    const { data } = await api.get('/office-operations', { params });
     return data;
   },
 
