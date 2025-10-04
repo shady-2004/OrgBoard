@@ -321,6 +321,22 @@ const getOrgEmployeesTotals = catchAsync(
   }
 );
 
+const getOrgEmployeesCount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return next(new AppError("Invalid organization ID format", 400));
+    }
+
+    const count = await Employee.countDocuments({ organization: id });
+
+    res.status(200).json({
+      status: "success",
+      data: { count },
+    });
+  }
+);
+
 const getEmployeesWithExpiredResidence = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
@@ -347,6 +363,7 @@ const getEmployeesWithExpiredResidence = catchAsync(
         .sort({ residencePermitExpiry: -1 }) 
         .skip(skip)
         .limit(limit)
+        .populate('organization', 'ownerName')
         .select("-__v");
   
   
@@ -401,6 +418,7 @@ const getEmployeesExpiringSoon = catchAsync(
         .sort({ residencePermitExpiry: 1 })
         .skip(skip)
         .limit(limit)
+        .populate('organization', 'ownerName')
         .select("-__v");
   
      
@@ -425,6 +443,23 @@ const getEmployeesExpiringSoon = catchAsync(
     }
 );
   
+const getOrgEmployeesNamesAndIds = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return next(new AppError("Invalid organization ID format", 400));
+  }
+
+  const employees = await Employee.find({ organization: id })
+    .select('_id name')
+    .sort({ name: 1 });
+
+  res.status(200).json({
+    status: "success",
+    results: employees.length,
+    data: { employees },
+  });
+});
+
   
 
 
@@ -441,4 +476,6 @@ export default {
   getEmployeesWithExpiredResidence,
   getEmployeesExpiringSoon,
   getOrgEmployeesTotals,
+  getOrgEmployeesCount,
+  getOrgEmployeesNamesAndIds,
 };

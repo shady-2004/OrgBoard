@@ -5,6 +5,7 @@ const userRouter = Router();
 
 userRouter.post("/", restrict('admin'), userController.addUser);
 userRouter.get("/", restrict('admin'), userController.getAllUsers);
+userRouter.patch("/:id/reset-password", restrict('admin'), userController.resetUserPassword);
 userRouter.delete("/:id", restrict('admin'), userController.removeUser);
 
 export default userRouter;

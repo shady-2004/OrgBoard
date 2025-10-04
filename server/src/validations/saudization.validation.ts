@@ -6,7 +6,7 @@ const objectId = z
   .refine((val) => Types.ObjectId.isValid(val), { message: "Invalid Organization ObjectId" });
 
 export const saudaizationZodSchema = z.object({
-  organization: objectId, // ✅ now requires a valid MongoDB ObjectId
+  organization: objectId,
 
   date: z
     .preprocess((val) => (val ? new Date(val as string) : new Date()), z.date())
@@ -21,11 +21,11 @@ export const saudaizationZodSchema = z.object({
     .regex(/^[\p{L}\s.'-]+$/u, "Employee name contains invalid characters"),
 
   workPermitStatus: z.enum(["pending", "issue_problem", "issued"], {
-    error: "Work permit status is required",
+    message: "Work permit status is required",
   }),
 
   deportationStatus: z.enum(["deported", "pending"], {
-    error: "Deportation status is required",
+    message: "Deportation status is required",
   }),
 
   deportationDate: z

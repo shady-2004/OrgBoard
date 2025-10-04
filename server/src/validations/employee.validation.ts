@@ -21,8 +21,7 @@ export const employeeSchemaZod = z
     residencePermitExpiry: z
       .string()
       .transform((val) => new Date(val))
-      .refine((date) => !isNaN(date.getTime()), { message: "Invalid residence permit expiry date" })
-      .refine((date) => date > new Date(), { message: "Residence permit expiry must be in the future" }),
+      .refine((date) => !isNaN(date.getTime()), { message: "Invalid residence permit expiry date" }),
 
     workCardIssueDate: z
       .string()

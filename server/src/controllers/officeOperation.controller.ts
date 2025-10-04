@@ -66,15 +66,22 @@ const getAllOfficeOperations = catchAsync(async (req: Request, res: Response, ne
     const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
 
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, type, paymentMethod } = req.query;
 
-    // Build date filter
+    // Build filters
+    const filter: any = {};
+
+    // Date filter
     const dateFilter: any = {};
     if (startDate) dateFilter.$gte = new Date(startDate as string);
     if (endDate) dateFilter.$lte = new Date(endDate as string);
-
-    const filter: any = {};
     if (startDate || endDate) filter.date = dateFilter;
+
+    // Type filter
+    if (type) filter.type = type;
+
+    // Payment method filter
+    if (paymentMethod) filter.paymentMethod = paymentMethod;
 
     const officeOperations = await OfficeOperation.find(filter)
         .skip(skip)

@@ -39,7 +39,7 @@ const login = catchAsync( async (req: Request, res: Response, next: NextFunction
     // Validate request body with Zod
     const result = loginSchema.safeParse(req.body);
     if (!result.success) {
-      return next(new AppError("Invalid email or password", 400));
+      return next(new AppError("البريد الإلكتروني أو كلمة المرور غير صحيحة", 400));
     }
 
     const { email, password } = result.data;
@@ -47,18 +47,19 @@ const login = catchAsync( async (req: Request, res: Response, next: NextFunction
     // Get user with password
     const docUser = await User.findOne({ email }).select("+password");
     if (!docUser) {
-      return next(new AppError("Incorrect email or password", 401));
+      return next(new AppError("البريد الإلكتروني أو كلمة المرور غير صحيحة", 401));
     }
 
     // Compare password using model method
     const isValid = await docUser.correctPassword(password);
     if (!isValid) {
-      return next(new AppError("Incorrect email or password", 401));
+      return next(new AppError("البريد الإلكتروني أو كلمة المرور غير صحيحة", 401));
     }
 
     // Build payload
     const user: UserPayload = {
       id: docUser._id.toString(),
+      email: docUser.email,
       role: docUser.role,
     };
 
@@ -92,6 +93,7 @@ const signUp = catchAsync(
     // Build payload
     const user: UserPayload = {
       id: docUser._id.toString(),
+      email: docUser.email,
       role: docUser.role,
     };
 
@@ -132,12 +134,30 @@ const changePassword = catchAsync(
 
     const userPayload: UserPayload = {
       id: currentUser._id.toString(),
+      email: currentUser.email,
       role: currentUser.role,
     };
     createSendToken(userPayload, 200, res);
   }
 );
 
+const me = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  // Get user from req (set by protect middleware)
+  const userId = req.user?.id;
 
+  // Check if user exists
+  const currentUser = await User.findById(userId).select("-password");
+  if (!currentUser) {
+    return next(new AppError("User not found", 404));
+  }
 
-export default { login, signUp , changePassword };
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: currentUser,
+    },
+  });
+}
+);
+
+export default { login, signUp ,    changePassword , me };

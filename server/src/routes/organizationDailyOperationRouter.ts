@@ -3,7 +3,7 @@ import organizationDailyOperationController from '../controllers/organizationDai
 const organizationDailyOperationRouter = Router();
 organizationDailyOperationRouter.post('/', organizationDailyOperationController.createOrgDailyOperation);
 organizationDailyOperationRouter.get('/', organizationDailyOperationController.getAllOrgDailyOperations);
+organizationDailyOperationRouter.get('/:id', organizationDailyOperationController.getOrgDailyOperationById);
 organizationDailyOperationRouter.delete('/:id', organizationDailyOperationController.deleteOrgDailyOperation);
 organizationDailyOperationRouter.patch('/:id', organizationDailyOperationController.updateOrgDailyOperation);
-organizationDailyOperationRouter.get('/:id', organizationDailyOperationController.getOrgDailyOperations);
 export default organizationDailyOperationRouter;

@@ -6,6 +6,7 @@ import User from "../models/usersModel";
 
 export interface UserPayload {
   id: string;
+  email: string;
   role: 'admin' | 'user';
 }
 
@@ -64,6 +65,7 @@ const protect = catchAsync(async (req, _res, next) => {
   // 6) Build user payload
   const user: UserPayload = {
     id: currentUser._id.toString(),
+    email: currentUser.email,
     role: currentUser.role
   };
 
