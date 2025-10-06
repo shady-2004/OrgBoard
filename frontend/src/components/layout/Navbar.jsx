@@ -35,7 +35,9 @@ export const Navbar = () => {
         <div className="flex items-center gap-4">
           <div className="text-left">
             <div className="text-sm font-medium text-gray-700">{user.email}</div>
-            <div className="text-xs text-gray-500 capitalize">{user.role === 'admin' ? 'مدير' : 'مستخدم'}</div>
+            <div className="text-xs text-gray-500 capitalize">
+              {user.role === 'admin' ? 'مدير' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}
+            </div>
           </div>
           <Button variant="danger" size="sm" onClick={handleLogout}>
             {t('auth.logout')}

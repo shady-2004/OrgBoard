@@ -1,4 +1,4 @@
-import User from "../models/usersModel";
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            import User from "../models/usersModel";
 import catchAsync from "../utils/catchAsync";
 import AppError from "../utils/AppError";
 import { Request, Response, NextFunction } from "express";
@@ -7,14 +7,20 @@ import { addUserSchema } from "../validations/user.validation";
 export const addUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
    
+    // Validate email
+    const emailResult = addUserSchema.safeParse({ email: req.body.email });
 
-    const result = addUserSchema.safeParse(req.body);
-
-    if (!result.success) {
+    if (!emailResult.success) {
       return next(new AppError("Invalid input data", 400));
     }
 
-    const { email } = result.data;
+    const { email } = emailResult.data;
+    const role = req.body.role || 'user'; // Allow admin to specify role
+
+    // Validate role
+    if (!['user', 'moderator'].includes(role)) {
+      return next(new AppError("Invalid role. Only 'user' or 'moderator' allowed.", 400));
+    }
 
     // Check if email already exists
     const existingUser = await User.findOne({ email });
@@ -28,12 +34,12 @@ export const addUser = catchAsync(
     const newUser = await User.create({
       email,
       password: defaultPassword,
-      role: "user",
+      role,
     });
 
     res.status(201).json({
       status: "success",
-      message: "User added successfully. Please ask user to change password on first login.",
+      message: "User added successfully. Default password: 12345678",
       data: {
         id: newUser._id,
         email: newUser.email,
@@ -45,8 +51,9 @@ export const addUser = catchAsync(
 
 const getAllUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Get all users and moderators (exclude admins)
     const users = await User.find({
-      role: { $eq: 'user' }
+      role: { $in: ['user', 'moderator'] }
     });
 
     res.status(200).json({

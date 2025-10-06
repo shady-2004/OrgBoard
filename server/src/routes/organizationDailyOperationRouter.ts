@@ -1,9 +1,18 @@
 import { Router } from 'express';
 import organizationDailyOperationController from '../controllers/organizationDailyOperation.controller';
+import restrict from '../middlewares/restrict';
 const organizationDailyOperationRouter = Router();
-organizationDailyOperationRouter.post('/', organizationDailyOperationController.createOrgDailyOperation);
+
+// Create: admin, moderator, user
+organizationDailyOperationRouter.post('/', restrict('admin', 'moderator', 'user'), organizationDailyOperationController.createOrgDailyOperation);
+
+// Read: all authenticated users
 organizationDailyOperationRouter.get('/', organizationDailyOperationController.getAllOrgDailyOperations);
 organizationDailyOperationRouter.get('/:id', organizationDailyOperationController.getOrgDailyOperationById);
-organizationDailyOperationRouter.delete('/:id', organizationDailyOperationController.deleteOrgDailyOperation);
-organizationDailyOperationRouter.patch('/:id', organizationDailyOperationController.updateOrgDailyOperation);
+
+// Update: admin, moderator only
+organizationDailyOperationRouter.patch('/:id', restrict('admin', 'moderator'), organizationDailyOperationController.updateOrgDailyOperation);
+
+// Delete: admin only
+organizationDailyOperationRouter.delete('/:id', restrict('admin'), organizationDailyOperationController.deleteOrgDailyOperation);
 export default organizationDailyOperationRouter;

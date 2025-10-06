@@ -8,11 +8,14 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { formatDate } from '../../utils/formatDate';
 import { usePagination } from '../../hooks/usePagination';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useAuth } from '../../hooks/useAuth';
+import { canEdit, canDelete } from '../../utils/permissions';
 import { t } from '../../utils/translations';
 
 export const SaudizationPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { currentPage, pageSize, setCurrentPage } = usePagination();
   const [searchName, setSearchName] = useState('');
   
@@ -221,21 +224,25 @@ export const SaudizationPage = () => {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => navigate(`/saudization/edit/${record._id}`)}
-                        >
-                          {t('common.edit')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDelete(record._id, record.employeeName)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          {t('common.delete')}
-                        </Button>
+                        {canEdit(user?.role) && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => navigate(`/saudization/edit/${record._id}`)}
+                          >
+                            {t('common.edit')}
+                          </Button>
+                        )}
+                        {canDelete(user?.role) && (
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDelete(record._id, record.employeeName)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            {t('common.delete')}
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

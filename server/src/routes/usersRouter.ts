@@ -3,6 +3,7 @@ import userController from "../controllers/user.controller";
 import restrict from "../middlewares/restrict";
 const userRouter = Router();
 
+// Only admin can manage users and moderators
 userRouter.post("/", restrict('admin'), userController.addUser);
 userRouter.get("/", restrict('admin'), userController.getAllUsers);
 userRouter.patch("/:id/reset-password", restrict('admin'), userController.resetUserPassword);

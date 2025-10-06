@@ -110,6 +110,9 @@ export const translations = {
     status: 'الحالة',
     actions: 'الإجراءات',
     noUsers: 'لا يوجد مستخدمون',
+    admin: 'مدير',
+    moderator: 'مشرف',
+    user: 'مستخدم',
   },
 
   // Daily Operations

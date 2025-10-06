@@ -1,11 +1,19 @@
 import { Router } from "express";
 import saudizationController from "../controllers/saudization.controller";
+import restrict from "../middlewares/restrict";
 const saudizationRouter = Router();
 
-saudizationRouter.post("/", saudizationController.createSaudizationRecord);
+// Create: admin, moderator, user
+saudizationRouter.post("/", restrict('admin', 'moderator', 'user'), saudizationController.createSaudizationRecord);
+
+// Read: all authenticated users
 saudizationRouter.get("/", saudizationController.getAllSaudizationsRecords);
 saudizationRouter.get("/:id", saudizationController.getSaudizationRecord);
-saudizationRouter.patch("/:id", saudizationController.updateSaudizationRecord);
-saudizationRouter.delete("/:id", saudizationController.deleteSaudizationRecord);
+
+// Update: admin, moderator only
+saudizationRouter.patch("/:id", restrict('admin', 'moderator'), saudizationController.updateSaudizationRecord);
+
+// Delete: admin only
+saudizationRouter.delete("/:id", restrict('admin'), saudizationController.deleteSaudizationRecord);
 
 export default saudizationRouter;

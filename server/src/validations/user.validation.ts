@@ -11,7 +11,7 @@ const authSchema = z.object({
 
 // Signup schema (extends login with role)
 export const signupSchema = authSchema.extend({
-  role: z.enum(["admin", "user"]).default("user"),
+  role: z.enum(["admin", "moderator", "user"]).default("user"),
 });
 
 export const addUserSchema = z.object({
