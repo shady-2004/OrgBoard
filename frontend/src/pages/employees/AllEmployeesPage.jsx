@@ -48,8 +48,11 @@ export const AllEmployeesPage = () => {
 
   const employees = data?.data?.employees || [];
 
+  // Filter out vacancies - only show actual employees
+  const actualEmployees = employees.filter(emp => emp.type === 'employee');
+
   // Sort employees on client side
-  const sortedEmployees = [...employees].sort((a, b) => {
+  const sortedEmployees = [...actualEmployees].sort((a, b) => {
     if (sortBy === 'expiry-asc') {
       return new Date(a.residencePermitExpiry) - new Date(b.residencePermitExpiry);
     } else if (sortBy === 'expiry-desc') {
@@ -62,17 +65,30 @@ export const AllEmployeesPage = () => {
     return 0;
   });
 
-  // Calculate statistics
-  const today = new Date();
-  const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    // Calculate statistics based on actual employees only
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   
-  const stats = sortedEmployees.reduce((acc, emp) => {
-    const expiryDate = new Date(emp.residencePermitExpiry);
-    if (expiryDate < today) acc.expired++;
-    else if (expiryDate <= thirtyDaysLater) acc.expiringSoon++;
-    else acc.valid++;
-    return acc;
-  }, { expired: 0, expiringSoon: 0, valid: 0 });
+  const expired = actualEmployees.filter((employee) => {
+    const expiryDate = new Date(employee.residencePermitExpiry);
+    return expiryDate < now;
+  }).length;
+
+  const expiringSoon = actualEmployees.filter((employee) => {
+    const expiryDate = new Date(employee.residencePermitExpiry);
+    return expiryDate >= now && expiryDate <= thirtyDaysFromNow;
+  }).length;
+
+  const valid = actualEmployees.filter((employee) => {
+    const expiryDate = new Date(employee.residencePermitExpiry);
+    return expiryDate > thirtyDaysFromNow;
+  }).length;
+
+  const stats = {
+    expired,
+    expiringSoon,
+    valid
+  };
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -123,9 +139,6 @@ export const AllEmployeesPage = () => {
     handleDeleteClick(employee);
   };
 
-  const handleView = (employee) => {
-    navigate(`/organizations/${employee.organization?._id}/employees`);
-  };
 
   return (
     <>
@@ -164,51 +177,51 @@ export const AllEmployeesPage = () => {
 
         {/* Statistics Cards */}
         {!isLoading && sortedEmployees.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium mb-1">إجمالي الموظفين</p>
-                    <p className="text-3xl font-bold text-blue-900">{data?.pagination?.total || 0}</p>
-                  </div>
-                  <div className="text-4xl">👥</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <Card>
+              <div className="flex items-center gap-4">
+                <div className="bg-purple-500 text-white text-3xl p-4 rounded-lg">
+                  👥
+                </div>
+                <div className="flex-1">
+                  <p className="text-3xl font-bold text-gray-800">{data?.pagination?.total || 0}</p>
+                  <p className="text-gray-600 text-sm mt-1">إجمالي الموظفين</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-50 to-green-100">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-600 font-medium mb-1">إقامات سارية</p>
-                    <p className="text-3xl font-bold text-green-900">{stats.valid}</p>
-                  </div>
-                  <div className="text-4xl">✅</div>
+            <Card>
+              <div className="flex items-center gap-4">
+                <div className="bg-green-500 text-white text-3xl p-4 rounded-lg">
+                  ✅
+                </div>
+                <div className="flex-1">
+                  <p className="text-3xl font-bold text-gray-800">{stats.valid}</p>
+                  <p className="text-gray-600 text-sm mt-1">إقامات سارية</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-orange-600 font-medium mb-1">قريبة الانتهاء (30 يوم)</p>
-                    <p className="text-3xl font-bold text-orange-900">{stats.expiringSoon}</p>
-                  </div>
-                  <div className="text-4xl">⚠️</div>
+            <Card>
+              <div className="flex items-center gap-4">
+                <div className="bg-orange-500 text-white text-3xl p-4 rounded-lg">
+                  ⏰
+                </div>
+                <div className="flex-1">
+                  <p className="text-3xl font-bold text-gray-800">{stats.expiringSoon}</p>
+                  <p className="text-gray-600 text-sm mt-1">قريبة الانتهاء (30 يوم)</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-gradient-to-br from-red-50 to-red-100">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-red-600 font-medium mb-1">إقامات منتهية</p>
-                    <p className="text-3xl font-bold text-red-900">{stats.expired}</p>
-                  </div>
-                  <div className="text-4xl">❌</div>
+            <Card>
+              <div className="flex items-center gap-4">
+                <div className="bg-red-500 text-white text-3xl p-4 rounded-lg">
+                  ⚠️
+                </div>
+                <div className="flex-1">
+                  <p className="text-3xl font-bold text-gray-800">{stats.expired}</p>
+                  <p className="text-gray-600 text-sm mt-1">إقامات منتهية</p>
                 </div>
               </div>
             </Card>
@@ -314,7 +327,6 @@ export const AllEmployeesPage = () => {
                 user={user}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onView={handleView}
                 loading={isLoading}
                 showOrganization={true}
                 showFinancials={false}

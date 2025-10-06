@@ -133,6 +133,18 @@ export const OrganizationDetailPage = () => {
                 <p className="text-base font-medium text-gray-900">{organization.ownerName}</p>
               </div>
               <div>
+                <p className="text-sm text-gray-500">رقم جوال صاحب المؤسسة</p>
+                <p className="text-base font-medium text-gray-900 dir-ltr text-right">
+                  {organization.ownerPhoneNumber || '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">رقم جوال وسيط المؤسسة</p>
+                <p className="text-base font-medium text-gray-900 dir-ltr text-right">
+                  {organization.brokerPhoneNumber || '-'}
+                </p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-500">الهوية الوطنية</p>
                 <p className="text-base font-medium text-gray-900">{organization.nationalId}</p>
               </div>

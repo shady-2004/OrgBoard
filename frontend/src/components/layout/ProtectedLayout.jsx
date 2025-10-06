@@ -21,9 +21,9 @@ export const ProtectedLayout = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
-      <div className="flex-1 mr-64">
+      <div className="flex-1 xl:mr-64">
         <Navbar />
-        <main className="p-8">
+        <main className="p-4 sm:p-6 xl:p-8">
           <Outlet />
         </main>
       </div>

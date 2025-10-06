@@ -31,6 +31,8 @@ const validateAge = (birthDate: Date): boolean => {
 // Organization interface
 export interface IOrganization extends Document {
   ownerName: string;          // اسم صاحب المؤسسة
+  ownerPhoneNumber: string;   // رقم جوال صاحب المؤسسة
+  brokerPhoneNumber: string;  // رقم جوال وسيط المؤسسة
   nationalId: string;         // رقم الهوية
   absherCode: string;         // رمز ابشر
   birthDate: Date;            // تاريخ الميلاد
@@ -51,6 +53,18 @@ const organizationSchema = new Schema<IOrganization>(
       minlength: [2, 'Owner name must be at least 2 characters'],
       maxlength: [100, 'Owner name cannot exceed 100 characters'],
       match: [/^[\u0600-\u06FFa-zA-Z\s]+$/, 'Owner name can only contain Arabic and English letters']
+    },
+    ownerPhoneNumber: {
+      type: String,
+      required: [true, 'Owner phone number is required'],
+      trim: true,
+      match: [/^(05|\+9665)[0-9]{8}$/, 'Invalid Saudi phone number format']
+    },
+    brokerPhoneNumber: {
+      type: String,
+      required: [true, 'Broker phone number is required'],
+      trim: true,
+      match: [/^(05|\+9665)[0-9]{8}$/, 'Invalid Saudi phone number format']
     },
     nationalId: { 
       type: String, 

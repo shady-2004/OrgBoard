@@ -4,14 +4,18 @@ import DailyOperation from "./dailyOperationModel";
 
 export interface IEmployee extends Document {
     _id: Types.ObjectId;            
-  name: string;                     // اسم العامل
-  phoneNumber: string;              // رقم الهاتف
+  type: 'employee' | 'vacancy';     // نوع السجل: موظف أو شاغر وظيفي
+  name: string;                     // اسم العامل أو اسم الشاغر الوظيفي
+  isSold?: boolean;                 // تم البيع (للشواغر الوظيفية)
+  hasArrived?: boolean;             // تم الوصول (للشواغر الوظيفية)
+  nationality?: string;             // الجنسية (مطلوب للموظفين فقط)
+  phoneNumber?: string;             // رقم الهاتف (مطلوب للموظفين فقط)
   addedBy?: string;                 // بواسطة (مضاف من قبل)
-  residencePermitNumber: string;    // رقم الإقامة (Iqama number)
-  residencePermitExpiry: Date;      // تاريخ انتهاء الإقامة
-  workCardIssueDate: Date;          // تاريخ اصدار كرت العمل
+  residencePermitNumber?: string;   // رقم الإقامة (مطلوب للموظفين فقط)
+  residencePermitExpiry?: Date;     // تاريخ انتهاء الإقامة (مطلوب للموظفين فقط)
+  workCardIssueDate?: Date;         // تاريخ اصدار كرت العمل (مطلوب للموظفين فقط)
   roleInOrganization: string;       // علاقة مع المؤسسة
-  requestedAmount: number;          // المبلغ المطلوب
+  requestedAmount?: number;         // المبلغ المطلوب (مطلوب للموظفين فقط)
   revenue?: number;                 // ايراد
   expenses?: number;                // مصروف
   organization: Types.ObjectId;     // Reference to Organization
@@ -19,16 +23,41 @@ export interface IEmployee extends Document {
 
 const employeeSchema = new Schema<IEmployee>(
   {
+    type: {
+      type: String,
+      enum: ['employee', 'vacancy'],
+      default: 'employee',
+      required: [true, "Type is required"],
+    },
     name: {
       type: String,
-      required: [true, "Employee name is required"],
+      required: [true, "Name is required"],
       trim: true,
       minlength: [2, "Name must be at least 2 characters"],
       maxlength: [100, "Name cannot exceed 100 characters"],
     },
+    isSold: {
+      type: Boolean,
+      default: false,
+    },
+    hasArrived: {
+      type: Boolean,
+      default: false,
+    },
+    nationality: {
+      type: String,
+      required: function(this: IEmployee) {
+        return this.type === 'employee';
+      },
+      trim: true,
+      minlength: [2, "Nationality must be at least 2 characters"],
+      maxlength: [50, "Nationality cannot exceed 50 characters"],
+    },
     phoneNumber: {
       type: String,
-      required: [true, "Phone number is required"],
+      required: function(this: IEmployee) {
+        return this.type === 'employee';
+      },
       trim: true,
       match: [/^(05|\+9665)[0-9]{8}$/, "Invalid Saudi phone number format"],
     },
@@ -39,27 +68,34 @@ const employeeSchema = new Schema<IEmployee>(
     },
     residencePermitNumber: {
       type: String,
-      required: [true, "Residence permit number is required"],
-      unique: true,
-      match: [/^[A-Z0-9]{5,20}$/, "Invalid residence permit number format"], // Example pattern
+      required: function(this: IEmployee) {
+        return this.type === 'employee';
+      },
+      match: [/^[A-Z0-9]{5,20}$/, "Invalid residence permit number format"],
     },
     residencePermitExpiry: {
       type: Date,
-      required: [true, "Residence permit expiry date is required"],
-   
+      required: function(this: IEmployee) {
+        return this.type === 'employee';
+      },
     },
     workCardIssueDate: {
       type: Date,
-      required: [true, "Work card issue date is required"],
+      required: function(this: IEmployee) {
+        return this.type === 'employee';
+      },
       validate: {
-        validator: (value: Date) => value <= new Date(),
+        validator: function(value: Date) {
+          if (!value) return true;
+          return value <= new Date();
+        },
         message: "Work card issue date cannot be in the future",
       },
     },
     requestedAmount: {
       type: Number,
-      required: [true, "Requested amount is required"],
       min: [0, "Requested amount cannot be negative"],
+      default: 0,
     },
     organization: {
       type: Schema.Types.ObjectId,
@@ -67,19 +103,23 @@ const employeeSchema = new Schema<IEmployee>(
       required: [true, "Organization reference is required"],
       validate: {
         validator: async function (value: Types.ObjectId) {
-          // Check if Organization with this ID exists
           const orgExists = await Organization.exists({ _id: value });
-          return !!orgExists; // true if exists, false otherwise
+          return !!orgExists;
         },
         message: "Organization with this ID does not exist",
       },
     },
-    
   },
   { timestamps: true }
 );
 
+// Add sparse unique index for residencePermitNumber to allow multiple null values
+// This ensures only non-null values must be unique (for employees)
+employeeSchema.index({ residencePermitNumber: 1 }, { unique: true, sparse: true });
 
+// Add sparse unique index for phoneNumber to allow multiple null values
+// This ensures only non-null values must be unique (for employees)
+employeeSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 
 employeeSchema.pre("findOneAndDelete", async function (next) {
   try {

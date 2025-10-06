@@ -3,12 +3,20 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+import xss from "xss-clean";
 import router from "./routes/routes";
 import globalErrorHanlder from "./controllers/error.controller";
 import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
 
 app.use(helmet());
 app.use(cookieParser());

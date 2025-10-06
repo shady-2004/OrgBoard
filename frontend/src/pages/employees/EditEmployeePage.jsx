@@ -16,12 +16,14 @@ export const EditEmployeePage = () => {
   const queryClient = useQueryClient();
   
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [selectedType, setSelectedType] = useState('employee');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm();
 
   // Fetch employee data
@@ -52,8 +54,14 @@ export const EditEmployeePage = () => {
         return date.toISOString().split('T')[0];
       };
 
+      setSelectedType(employee.type || 'employee');
+
       reset({
+        type: employee.type || 'employee',
         name: employee.name || '',
+        isSold: employee.isSold || false,
+        hasArrived: employee.hasArrived || false,
+        nationality: employee.nationality || '',
         phoneNumber: employee.phoneNumber || '',
         addedBy: employee.addedBy || '',
         residencePermitNumber: employee.residencePermitNumber || '',
@@ -93,6 +101,14 @@ export const EditEmployeePage = () => {
       }
       return acc;
     }, {});
+
+    // Convert booleans
+    if (cleanedData.isSold !== undefined) {
+      cleanedData.isSold = cleanedData.isSold === 'true' || cleanedData.isSold === true;
+    }
+    if (cleanedData.hasArrived !== undefined) {
+      cleanedData.hasArrived = cleanedData.hasArrived === 'true' || cleanedData.hasArrived === true;
+    }
 
     // Convert dates to ISO format
     if (cleanedData.residencePermitExpiry) {
@@ -195,113 +211,200 @@ export const EditEmployeePage = () => {
         <Card>
           <div className="p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Employee Name */}
+              {/* Type Selection */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  نوع السجل <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="employee"
+                      {...register('type')}
+                      onChange={(e) => setSelectedType(e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-gray-700">موظف</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="vacancy"
+                      {...register('type')}
+                      onChange={(e) => setSelectedType(e.target.value)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-gray-700">شاغر وظيفي</span>
+                  </label>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  يمكنك تحويل الشاغر الوظيفي إلى موظف والعكس
+                </p>
+              </div>
+
+              {/* Employee/Vacancy Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  اسم الموظف <span className="text-red-500">*</span>
+                  {selectedType === 'vacancy' ? 'اسم الشاغر الوظيفي' : 'اسم الموظف'} <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  {...register('name', { required: 'اسم الموظف مطلوب' })}
-                  placeholder="أدخل اسم الموظف الكامل"
+                  {...register('name', { required: selectedType === 'vacancy' ? 'اسم الشاغر الوظيفي مطلوب' : 'اسم الموظف مطلوب' })}
+                  placeholder={selectedType === 'vacancy' ? 'مثال: سائق، عامل نظافة، محاسب' : 'أدخل اسم الموظف الكامل'}
                   error={errors.name?.message}
                 />
               </div>
 
-              {/* Phone Number and Added By Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    رقم الهاتف <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    {...register('phoneNumber', { 
-                      required: 'رقم الهاتف مطلوب',
-                      pattern: {
-                        value: /^(05|\+9665)[0-9]{8}$/,
-                        message: 'صيغة رقم الهاتف غير صحيحة (مثال: 0512345678)'
-                      }
-                    })}
-                    placeholder="05xxxxxxxx"
-                    error={errors.phoneNumber?.message}
-                  />
-                </div>
+              {/* Vacancy Fields */}
+              {selectedType === 'vacancy' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  {/* Has Arrived */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      تم الوصول
+                    </label>
+                    <select
+                      {...register('hasArrived')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="false">لا</option>
+                      <option value="true">نعم</option>
+                    </select>
+                  </div>
 
-                {/* Added By */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    بواسطة
-                  </label>
-                  <Input
-                    {...register('addedBy')}
-                    placeholder="اسم الشخص المضاف من قبله (اختياري)"
-                    error={errors.addedBy?.message}
-                  />
+                  {/* Is Sold */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      تم البيع
+                    </label>
+                    <select
+                      {...register('isSold')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="false">لا</option>
+                      <option value="true">نعم</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Residence Permit Number */}
+              {/* Employee Fields - Only show if type is 'employee' */}
+              {selectedType === 'employee' && (
+                <>
+                  {/* Nationality */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      الجنسية <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      {...register('nationality', { 
+                        required: selectedType === 'employee' ? 'الجنسية مطلوبة' : false,
+                        minLength: { value: 2, message: 'الجنسية يجب أن تكون حرفين على الأقل' },
+                        maxLength: { value: 50, message: 'الجنسية لا يمكن أن تتجاوز 50 حرف' }
+                      })}
+                      placeholder="أدخل الجنسية (مثال: سعودي، مصري، هندي)"
+                      error={errors.nationality?.message}
+                    />
+                  </div>
+
+                  {/* Phone Number and Added By Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Phone Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        رقم الهاتف <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        {...register('phoneNumber', { 
+                          required: selectedType === 'employee' ? 'رقم الهاتف مطلوب' : false,
+                          pattern: {
+                            value: /^(05|\+9665)[0-9]{8}$/,
+                            message: 'صيغة رقم الهاتف غير صحيحة (مثال: 0512345678)'
+                          }
+                        })}
+                        placeholder="05xxxxxxxx"
+                        error={errors.phoneNumber?.message}
+                      />
+                    </div>
+
+                    {/* Added By */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        بواسطة
+                      </label>
+                      <Input
+                        {...register('addedBy')}
+                        placeholder="اسم الشخص المضاف من قبله (اختياري)"
+                        error={errors.addedBy?.message}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Residence Permit Number */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      رقم الإقامة <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      {...register('residencePermitNumber', { required: selectedType === 'employee' ? 'رقم الإقامة مطلوب' : false })}
+                      placeholder="أدخل رقم الإقامة"
+                      error={errors.residencePermitNumber?.message}
+                    />
+                  </div>
+
+                  {/* Dates Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Residence Permit Expiry */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        تاريخ انتهاء الإقامة <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="date"
+                        {...register('residencePermitExpiry', { required: selectedType === 'employee' ? 'تاريخ انتهاء الإقامة مطلوب' : false })}
+                        error={errors.residencePermitExpiry?.message}
+                      />
+                    </div>
+
+                    {/* Work Card Issue Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        تاريخ إصدار رخصة العمل <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="date"
+                        {...register('workCardIssueDate', {
+                          required: selectedType === 'employee' ? 'تاريخ إصدار رخصة العمل مطلوب' : false,
+                          validate: (value) => {
+                            if (!value) return true;
+                            const selectedDate = new Date(value);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (selectedDate > today) {
+                              return 'تاريخ إصدار رخصة العمل يجب أن يكون في الماضي';
+                            }
+                            return true;
+                          }
+                        })}
+                        error={errors.workCardIssueDate?.message}
+                      />
+                    </div>
+                  </div>
+
+                </>
+              )}
+
+              {/* Requested Amount - Available for both employees and vacancies */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  رقم الإقامة <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  {...register('residencePermitNumber', { required: 'رقم الإقامة مطلوب' })}
-                  placeholder="أدخل رقم الإقامة"
-                  error={errors.residencePermitNumber?.message}
-                />
-              </div>
-
-              {/* Dates Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Residence Permit Expiry */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    تاريخ انتهاء الإقامة <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="date"
-                    {...register('residencePermitExpiry', { required: 'تاريخ انتهاء الإقامة مطلوب' })}
-                    error={errors.residencePermitExpiry?.message}
-                  />
-                </div>
-
-                {/* Work Card Issue Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    تاريخ إصدار رخصة العمل
-                  </label>
-                  <Input
-                    type="date"
-                    {...register('workCardIssueDate', {
-                      validate: (value) => {
-                        if (!value) return true; // Optional field
-                        const selectedDate = new Date(value);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0); // Reset time to compare only dates
-                        if (selectedDate > today) {
-                          return 'تاريخ إصدار رخصة العمل يجب أن يكون في الماضي';
-                        }
-                        return true;
-                      }
-                    })}
-                    error={errors.workCardIssueDate?.message}
-                  />
-                </div>
-              </div>
-
-              {/* Requested Amount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  المبلغ المطلوب <span className="text-red-500">*</span>
+                  المبلغ المطلوب
                 </label>
                 <Input
                   type="number"
                   {...register('requestedAmount', {
-                    required: 'المبلغ المطلوب مطلوب',
                     min: { value: 0, message: 'المبلغ يجب أن يكون أكبر من أو يساوي 0' },
                   })}
-                  placeholder="أدخل المبلغ المطلوب"
+                  placeholder="أدخل المبلغ المطلوب (اختياري)"
                   error={errors.requestedAmount?.message}
                 />
               </div>

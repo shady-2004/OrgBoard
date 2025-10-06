@@ -39,64 +39,74 @@ export const Table = ({
 
   return (
     <Card className={className}>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              {columns.map((column, index) => (
-                <th
-                  key={column.key || index}
-                  className={`px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.headerClassName || ''
-                  }`}
-                >
-                  {column.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {!data || data.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-8 text-center text-gray-500"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              data.map((row) => (
-                <tr
-                  key={row[keyField]}
-                  className={`transition-colors ${
-                    onRowClick
-                      ? 'hover:bg-gray-50 cursor-pointer'
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
-                >
-                  {columns.map((column, colIndex) => {
-                    const value = column.key
-                      ? column.key.split('.').reduce((obj, key) => obj?.[key], row)
-                      : null;
-
-                    return (
-                      <td
-                        key={column.key || colIndex}
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-right ${
-                          column.className || 'text-gray-900'
-                        }`}
-                      >
-                        {column.render ? column.render(row, value) : value}
-                      </td>
-                    );
-                  })}
+      {/* Mobile scroll hint */}
+      <div className="block sm:hidden px-4 py-2 bg-blue-50 border-b border-blue-100">
+        <p className="text-xs text-blue-600 text-center">
+          ← اسحب لليمين واليسار لعرض المزيد →
+        </p>
+      </div>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <div className="overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  {columns.map((column, index) => (
+                    <th
+                      key={column.key || index}
+                      className={`px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
+                        column.headerClassName || ''
+                      }`}
+                    >
+                      {column.label}
+                    </th>
+                  ))}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {!data || data.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={columns.length}
+                      className="px-6 py-8 text-center text-gray-500"
+                    >
+                      {emptyMessage}
+                    </td>
+                  </tr>
+                ) : (
+                  data.map((row) => (
+                    <tr
+                      key={row[keyField]}
+                      className={`transition-colors ${
+                        onRowClick
+                          ? 'hover:bg-gray-50 cursor-pointer'
+                          : 'hover:bg-gray-50'
+                      }`}
+                      onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    >
+                      {columns.map((column, colIndex) => {
+                        const value = column.key
+                          ? column.key.split('.').reduce((obj, key) => obj?.[key], row)
+                          : null;
+
+                        return (
+                          <td
+                            key={column.key || colIndex}
+                            className={`px-3 sm:px-6 py-4 text-sm text-right ${
+                              column.className || 'text-gray-900'
+                            }`}
+                          >
+                            {column.render ? column.render(row, value) : value}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </Card>
   );

@@ -7,6 +7,7 @@
     /* Paths */
     "rootDir": "./src",
     "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
 
     /* Strictness */
     "strict": true,

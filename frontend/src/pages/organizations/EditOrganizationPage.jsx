@@ -44,6 +44,8 @@ export const EditOrganizationPage = () => {
 
       reset({
         ownerName: organization.ownerName || '',
+        ownerPhoneNumber: organization.ownerPhoneNumber || '',
+        brokerPhoneNumber: organization.brokerPhoneNumber || '',
         nationalId: organization.nationalId || '',
         absherCode: organization.absherCode || '',
         birthDate: formatDateForInput(organization.birthDate),
@@ -77,6 +79,8 @@ export const EditOrganizationPage = () => {
     // Clean up the data: remove empty strings and convert types
     const formattedData = {
       ownerName: data.ownerName.trim(),
+      ownerPhoneNumber: data.ownerPhoneNumber.trim(),
+      brokerPhoneNumber: data.brokerPhoneNumber.trim(),
       nationalId: data.nationalId.trim(),
       absherCode: data.absherCode.trim().toUpperCase(),
       birthDate: data.birthDate,
@@ -179,6 +183,43 @@ export const EditOrganizationPage = () => {
                   placeholder="أدخل اسم المالك"
                   error={errors.ownerName?.message}
                 />
+              </div>
+
+              {/* Phone Numbers Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    رقم جوال صاحب المؤسسة <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    {...register('ownerPhoneNumber', {
+                      required: 'رقم جوال صاحب المؤسسة مطلوب',
+                      pattern: {
+                        value: /^(05|\+9665)[0-9]{8}$/,
+                        message: 'صيغة رقم الجوال غير صحيحة (مثال: 0512345678)',
+                      },
+                    })}
+                    placeholder="05xxxxxxxx"
+                    error={errors.ownerPhoneNumber?.message}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    رقم جوال وسيط المؤسسة <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    {...register('brokerPhoneNumber', {
+                      required: 'رقم جوال وسيط المؤسسة مطلوب',
+                      pattern: {
+                        value: /^(05|\+9665)[0-9]{8}$/,
+                        message: 'صيغة رقم الجوال غير صحيحة (مثال: 0512345678)',
+                      },
+                    })}
+                    placeholder="05xxxxxxxx"
+                    error={errors.brokerPhoneNumber?.message}
+                  />
+                </div>
               </div>
 
               {/* National ID and Absher Code Row */}

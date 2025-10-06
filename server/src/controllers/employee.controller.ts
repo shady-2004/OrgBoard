@@ -334,7 +334,7 @@ const getOrgEmployeesCount = catchAsync(
       return next(new AppError("Invalid organization ID format", 400));
     }
 
-    const count = await Employee.countDocuments({ organization: id });
+    const count = await Employee.countDocuments({ organization: id, type: 'employee' });
 
     res.status(200).json({
       status: "success",
@@ -353,6 +353,7 @@ const getEmployeesWithExpiredResidence = catchAsync(
 
       const search = req.query.search ? String(req.query.search).trim() : null;
       const filter: any = {
+        type: 'employee',
         residencePermitExpiry: { $lte: today },
       };
       if (search) {
@@ -409,6 +410,7 @@ const getEmployeesExpiringSoon = catchAsync(
 
       const search = req.query.search ? String(req.query.search).trim() : null;
       const filter: any = {
+        type: 'employee',
         residencePermitExpiry: { $gt: today, $lte: thirtyDaysLater },
       };
       if (search) {
@@ -455,7 +457,7 @@ const getOrgEmployeesNamesAndIds = catchAsync(async (req: Request, res: Response
     return next(new AppError("Invalid organization ID format", 400));
   }
 
-  const employees = await Employee.find({ organization: id })
+  const employees = await Employee.find({ organization: id, type: 'employee' })
     .select('_id name')
     .sort({ name: 1 });
 

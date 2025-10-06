@@ -6,9 +6,9 @@ import { formatCurrency } from '../../utils/formatCurrency';
 import { canEdit, canDelete } from '../../utils/permissions';
 
 /**
- * Reusable Employees Table Component
+ * Reusable Employees Table Component (Employees Only - Not Vacancies)
  * @param {Object} props
- * @param {Array} props.employees - Array of employee objects
+ * @param {Array} props.employees - Array of employee objects (type: 'employee')
  * @param {Object} props.user - Current user object with role
  * @param {Function} props.onEdit - Callback when edit button is clicked
  * @param {Function} props.onDelete - Callback when delete button is clicked
@@ -53,6 +53,12 @@ export const EmployeesTable = ({
         key: 'name',
         className: 'text-gray-900 font-medium',
       },
+      {
+        label: 'الجنسية',
+        key: 'nationality',
+        className: 'text-gray-700',
+        render: (row) => row.nationality || '-',
+      },
     ];
 
     // Add organization column if needed
@@ -71,6 +77,7 @@ export const EmployeesTable = ({
         label: 'رقم الهاتف',
         key: 'phoneNumber',
         className: 'text-gray-600',
+        render: (row) => row.phoneNumber || '-',
       },
       {
         label: 'بواسطة',
@@ -82,12 +89,15 @@ export const EmployeesTable = ({
         label: 'رقم الإقامة',
         key: 'residencePermitNumber',
         className: 'text-gray-600',
+        render: (row) => row.residencePermitNumber || '-',
       },
       {
         label: 'تاريخ انتهاء الإقامة',
         key: 'residencePermitExpiry',
         className: 'text-gray-600',
         render: (row, value) => {
+          if (!value) return '-';
+          
           const { isExpired, isExpiringSoon } = getResidenceStatus(value);
           
           return (
@@ -114,6 +124,7 @@ export const EmployeesTable = ({
         label: 'الحالة',
         key: 'status',
         render: (row) => {
+          if (!row.residencePermitExpiry) return '-';
           const { isExpired, isExpiringSoon } = getResidenceStatus(row.residencePermitExpiry);
           
           if (isExpired) {
@@ -172,12 +183,13 @@ export const EmployeesTable = ({
     columns.push({
       key: 'actions',
       render: (row) => (
-        <div className="flex gap-2 justify-end">
+        <div className="flex flex-wrap gap-1 sm:gap-2 justify-end">
           {showViewButton && onView && (
             <Button
               size="sm"
               variant="secondary"
               onClick={() => onView(row)}
+              className="text-xs sm:text-sm whitespace-nowrap"
             >
               عرض
             </Button>
@@ -187,6 +199,7 @@ export const EmployeesTable = ({
               size="sm"
               variant="secondary"
               onClick={() => onEdit(row)}
+              className="text-xs sm:text-sm whitespace-nowrap"
             >
               تعديل
             </Button>
@@ -196,6 +209,7 @@ export const EmployeesTable = ({
               size="sm"
               variant="danger"
               onClick={() => onDelete(row)}
+              className="text-xs sm:text-sm whitespace-nowrap"
             >
               حذف
             </Button>
