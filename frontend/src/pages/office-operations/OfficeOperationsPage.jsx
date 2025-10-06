@@ -10,6 +10,8 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { canEdit, canDelete } from '../../utils/permissions';
 import { t } from '../../utils/translations';
 import { formatDate } from '../../utils/formatDate';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -17,6 +19,7 @@ import { formatCurrency } from '../../utils/formatCurrency';
 export const OfficeOperationsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   
@@ -380,27 +383,31 @@ export const OfficeOperationsPage = () => {
               key: 'actions',
               render: (row) => (
                 <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(row._id);
-                    }}
-                  >
-                    {t('common.edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(row._id, formatDate(row.date));
-                    }}
-                    disabled={deleteMutation.isLoading}
-                  >
-                    {deleteMutation.isLoading ? 'جاري الحذف...' : t('common.delete')}
-                  </Button>
+                  {canEdit(user?.role) && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(row._id);
+                      }}
+                    >
+                      {t('common.edit')}
+                    </Button>
+                  )}
+                  {canDelete(user?.role) && (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row._id, formatDate(row.date));
+                      }}
+                      disabled={deleteMutation.isLoading}
+                    >
+                      {deleteMutation.isLoading ? 'جاري الحذف...' : t('common.delete')}
+                    </Button>
+                  )}
                 </div>
               ),
             },
