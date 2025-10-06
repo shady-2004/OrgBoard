@@ -9,6 +9,7 @@ export const Sidebar = () => {
   const menuItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: '📊' },
     { path: '/organizations', label: t('nav.organizations'), icon: '🏢' },
+    { path: '/employees', label: t('nav.employees'), icon: '👤' },
     { path: '/office-operations', label: t('nav.officeOperations'), icon: '🏭' },
     { path: '/saudization', label: t('nav.saudization'), icon: '🇸🇦' },
     { path: '/users', label: t('nav.users'), icon: '👥', adminOnly: true },
@@ -31,7 +32,7 @@ export const Sidebar = () => {
 
       <nav className="flex-1 overflow-y-auto py-4">
         {filteredMenuItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           return (
             <Link
               key={item.path}

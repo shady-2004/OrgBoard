@@ -14,6 +14,17 @@ export const employeeSchemaZod = z
       .max(100, "Name cannot exceed 100 characters")
       .trim(),
 
+    phoneNumber: z
+      .string()
+      .regex(/^(05|\+9665)[0-9]{8}$/, "Invalid Saudi phone number format")
+      .trim(),
+
+    addedBy: z
+      .string()
+      .max(100, "Added by field cannot exceed 100 characters")
+      .trim()
+      .optional(),
+
     residencePermitNumber: z
       .string()
       .regex(/^[A-Z0-9]{5,20}$/, "Invalid residence permit number format"),

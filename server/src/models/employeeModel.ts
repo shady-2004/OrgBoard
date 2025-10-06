@@ -5,6 +5,8 @@ import DailyOperation from "./dailyOperationModel";
 export interface IEmployee extends Document {
     _id: Types.ObjectId;            
   name: string;                     // اسم العامل
+  phoneNumber: string;              // رقم الهاتف
+  addedBy?: string;                 // بواسطة (مضاف من قبل)
   residencePermitNumber: string;    // رقم الإقامة (Iqama number)
   residencePermitExpiry: Date;      // تاريخ انتهاء الإقامة
   workCardIssueDate: Date;          // تاريخ اصدار كرت العمل
@@ -23,6 +25,17 @@ const employeeSchema = new Schema<IEmployee>(
       trim: true,
       minlength: [2, "Name must be at least 2 characters"],
       maxlength: [100, "Name cannot exceed 100 characters"],
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "Phone number is required"],
+      trim: true,
+      match: [/^(05|\+9665)[0-9]{8}$/, "Invalid Saudi phone number format"],
+    },
+    addedBy: {
+      type: String,
+      trim: true,
+      maxlength: [100, "Added by field cannot exceed 100 characters"],
     },
     residencePermitNumber: {
       type: String,

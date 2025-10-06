@@ -10,6 +10,7 @@ import { OrganizationEmployeesPage } from '../pages/organizations/OrganizationEm
 import { OrganizationDailyOperationsPage } from '../pages/organizations/OrganizationDailyOperationsPage';
 import { AddOrganizationPage } from '../pages/organizations/AddOrganizationPage';
 import { EditOrganizationPage } from '../pages/organizations/EditOrganizationPage';
+import { AllEmployeesPage } from '../pages/employees/AllEmployeesPage';
 import { AddEmployeePage } from '../pages/employees/AddEmployeePage';
 import { EditEmployeePage } from '../pages/employees/EditEmployeePage';
 import { AddDailyOperationPage } from '../pages/daily-operations/AddDailyOperationPage';
@@ -25,9 +26,6 @@ import { AddSaudizationPage } from '../pages/saudization/AddSaudizationPage';
 import { EditSaudizationPage } from '../pages/saudization/EditSaudizationPage';
 import { UsersPage } from '../pages/users/UsersPage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
-
-// Placeholder pages
-const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
 
 export const AppRouter = () => {
   return (
@@ -58,7 +56,7 @@ export const AppRouter = () => {
           <Route path="/organizations/:id/organization-daily-operations" element={<OrganizationDailyOperationsListPage />} />
           
           {/* Employees */}
-          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/employees" element={<AllEmployeesPage />} />
           <Route path="/employees/add" element={<AddEmployeePage />} />
           <Route path="/employees/edit/:id" element={<EditEmployeePage />} />
           

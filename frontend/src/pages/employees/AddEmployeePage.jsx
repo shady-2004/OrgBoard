@@ -160,6 +160,39 @@ export const AddEmployeePage = () => {
                 />
               </div>
 
+              {/* Phone Number and Added By Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    رقم الهاتف <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    {...register('phoneNumber', { 
+                      required: 'رقم الهاتف مطلوب',
+                      pattern: {
+                        value: /^(05|\+9665)[0-9]{8}$/,
+                        message: 'صيغة رقم الهاتف غير صحيحة (مثال: 0512345678)'
+                      }
+                    })}
+                    placeholder="05xxxxxxxx"
+                    error={errors.phoneNumber?.message}
+                  />
+                </div>
+
+                {/* Added By */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    بواسطة
+                  </label>
+                  <Input
+                    {...register('addedBy')}
+                    placeholder="اسم الشخص المضاف من قبله (اختياري)"
+                    error={errors.addedBy?.message}
+                  />
+                </div>
+              </div>
+
               {/* Residence Permit Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

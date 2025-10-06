@@ -6,14 +6,12 @@ import { employeesAPI } from '../../api/employees';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { SearchBar } from '../../components/ui/SearchBar';
-import { Table } from '../../components/tables/Table';
+import { EmployeesTable } from '../../components/tables/EmployeesTable';
 import { Pagination } from '../../components/tables/Pagination';
 import { Toast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useAuth } from '../../hooks/useAuth';
-import { canEdit, canDelete } from '../../utils/permissions';
-import { formatDate } from '../../utils/formatDate';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 export const OrganizationEmployeesPage = () => {
@@ -86,6 +84,14 @@ export const OrganizationEmployeesPage = () => {
     if (confirmDialog.employeeId) {
       deleteMutation.mutate(confirmDialog.employeeId);
     }
+  };
+
+  const handleEdit = (employee) => {
+    navigate(`/employees/edit/${employee._id}`);
+  };
+
+  const handleDelete = (employee) => {
+    handleDeleteClick(employee);
   };
 
   if (!organization && !isLoading) {
@@ -218,104 +224,20 @@ export const OrganizationEmployeesPage = () => {
         {!isLoading && employees.length > 0 && (
           <Card>
             <div className="p-6">
-              <Table
-                columns={[
-                  {
-                    label: 'اسم الموظف',
-                    key: 'name',
-                    className: 'text-gray-900 font-medium',
-                  },
-                  {
-                    label: 'رقم الإقامة',
-                    key: 'residencePermitNumber',
-                    className: 'text-gray-600',
-                  },
-                  {
-                    label: 'تاريخ انتهاء الإقامة',
-                    key: 'residencePermitExpiry',
-                    className: 'text-gray-600',
-                    render: (row, value) => {
-                      const expiryDate = new Date(value);
-                      const today = new Date();
-                      const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                      
-                      const isExpired = expiryDate < today;
-                      const isExpiringSoon = expiryDate >= today && expiryDate <= thirtyDaysLater;
-                      
-                      return (
-                        <span className={
-                          isExpired
-                            ? 'text-red-600 font-semibold'
-                            : isExpiringSoon
-                            ? 'text-orange-600 font-semibold'
-                            : ''
-                        }>
-                          {formatDate(value)}
-                          {isExpired && ' (منتهية)'}
-                          {isExpiringSoon && ' (قريبة الانتهاء)'}
-                        </span>
-                      );
-                    },
-                  },
-                  {
-                    label: 'المبلغ المطلوب',
-                    key: 'requestedAmount',
-                    className: 'text-gray-900',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    label: 'الإيرادات',
-                    key: 'totalRevenue',
-                    className: 'text-green-600',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    label: 'المصروفات',
-                    key: 'totalExpenses',
-                    className: 'text-red-600',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    label: 'المتبقي',
-                    key: 'remaining',
-                    className: 'text-orange-600 font-semibold',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    key: 'actions',
-                    render: (row) => (
-                      <div className="flex gap-2 justify-end">
-                        {canEdit(user?.role) && (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => navigate(`/employees/edit/${row._id}`)}
-                          >
-                            تعديل
-                          </Button>
-                        )}
-                        {canDelete(user?.role) && (
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleDeleteClick(row)}
-                          >
-                            حذف
-                          </Button>
-                        )}
-                      </div>
-                    ),
-                  },
-                ]}
-                data={employees}
-                keyField="_id"
+              <EmployeesTable
+                employees={employees}
+                user={user}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
                 loading={isLoading}
-                loadingMessage="جاري تحميل الموظفين..."
                 emptyMessage={
                   debouncedSearch
                     ? `لا توجد نتائج للبحث عن "${debouncedSearch}"`
                     : 'لا يوجد موظفون مرتبطون بهذه المنظمة'
                 }
+                showOrganization={false}
+                showFinancials={true}
+                showViewButton={false}
               />
 
               {/* Pagination */}

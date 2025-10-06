@@ -168,14 +168,20 @@ const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
   const skip = (page - 1) * limit;
 
   const search = req.query.search ? String(req.query.search).trim() : null;
-    const filter: any = {
-      };
-      if (search) {
-        filter.$or = [
-          {name: { $regex: search, $options: "i" } },
-          {residencePermitNumber: { $regex: search, $options: "i" } }
-        ] 
-      }
+  const organizationFilter = req.query.organization ? String(req.query.organization).trim() : null;
+  
+  const filter: any = {};
+  
+  if (search) {
+    filter.$or = [
+      {name: { $regex: search, $options: "i" } },
+      {residencePermitNumber: { $regex: search, $options: "i" } }
+    ] 
+  }
+  
+  if (organizationFilter) {
+    filter.organization = organizationFilter;
+  }
 
   const totalEmployees = await Employee.countDocuments(filter);
   const employees = await Employee.find(filter, "-__v")
