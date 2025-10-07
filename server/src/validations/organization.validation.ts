@@ -3,6 +3,7 @@ import { z } from "zod";
 // Regex validators
 const nationalIdRegex = /^[12]\d{9}$/;
 const absherCodeRegex = /^[A-Za-z0-9]{6,20}$/;
+const saudiPhoneRegex = /^(05|\+9665)[0-9]{8}$/;
 
 export const organizationSchemaZod = z
   .object({
@@ -11,6 +12,16 @@ export const organizationSchemaZod = z
       .min(2, "Owner name must be at least 2 characters")
       .max(100, "Owner name cannot exceed 100 characters")
       .regex(/^[\u0600-\u06FFa-zA-Z\s]+$/, "Owner name can only contain Arabic and English letters"),
+
+    ownerPhoneNumber: z
+      .string()
+      .regex(saudiPhoneRegex, "Invalid Saudi phone number format (e.g., 0512345678 or +966512345678)")
+      .trim(),
+
+    brokerPhoneNumber: z
+      .string()
+      .regex(saudiPhoneRegex, "Invalid Saudi phone number format (e.g., 0512345678 or +966512345678)")
+      .trim(),
 
     nationalId: z
       .string()

@@ -13,8 +13,16 @@ export const getDashboardStats = catchAsync(
     // Count total organizations
     const totalOrganizations = await Organization.countDocuments();
 
-    // Count total employees across all organizations
-    const totalEmployees = await Employee.countDocuments();
+    // Count total employees (only type: 'employee', not vacancies)
+    const totalEmployees = await Employee.countDocuments({ type: 'employee' });
+
+    // Count total vacancies (type: 'vacancy')
+    const totalVacancies = await Employee.countDocuments({ type: 'vacancy' });
+
+    // Calculate available vacancy slots across all organizations
+    // Formula: (4 * number of organizations) - total employees
+    const maxEmployeesPerOrg = 4;
+    const totalAvailableSlots = Math.max(0, (maxEmployeesPerOrg * totalOrganizations) - totalEmployees);
 
     // Count total daily operations (employee operations)
     const dailyOperations = await DailyOperation.countDocuments();
@@ -25,8 +33,9 @@ export const getDashboardStats = catchAsync(
     // Count total office operations
     const officeOperations = await OfficeOperation.countDocuments();
 
-    // Get employees with expired residence permits
+    // Get employees with expired residence permits (only employees, not vacancies)
     const expiredEmployees = await Employee.countDocuments({
+      type: 'employee',
       residencePermitExpiry: { $lt: new Date() },
     });
 
@@ -34,14 +43,15 @@ export const getDashboardStats = catchAsync(
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
     const nearlyExpiredEmployees = await Employee.countDocuments({
+      type: 'employee',
       residencePermitExpiry: { 
         $gt: new Date(),
         $lte: thirtyDaysFromNow 
       },
     });
 
-    // Employee financial insights - get all employees and their requested amounts
-    const allEmployees = await Employee.find({}, "_id requestedAmount");
+    // Employee financial insights - get all employees (not vacancies) and their requested amounts
+    const allEmployees = await Employee.find({ type: 'employee' }, "_id requestedAmount");
     
     const employeeIds = allEmployees.map(emp => emp._id as mongoose.Types.ObjectId);
     const totalRequestedAmount = allEmployees.reduce((sum, emp) => sum + (emp.requestedAmount || 0), 0);
@@ -102,6 +112,8 @@ export const getDashboardStats = catchAsync(
       data: {
         totalOrganizations,
         totalEmployees,
+        totalVacancies,
+        totalAvailableSlots,
         dailyOperations,
         activeUsers,
         officeOperations,
@@ -211,7 +223,14 @@ export const getRecentActivities = catchAsync(
       .select('ownerName createdAt');
 
     // Get recent employees
-    const recentEmployees = await Employee.find()
+    const recentEmployees = await Employee.find({ type: 'employee' })
+      .populate('organization', 'ownerName')
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('name organization createdAt');
+
+    // Get recent vacancies
+    const recentVacancies = await Employee.find({ type: 'vacancy' })
       .populate('organization', 'ownerName')
       .sort({ createdAt: -1 })
       .limit(5)
@@ -238,6 +257,13 @@ export const getRecentActivities = catchAsync(
         title: 'موظف جديد',
         description: `${emp.name} - ${(emp.organization as any)?.ownerName || 'غير محدد'}`,
         createdAt: (emp as any).createdAt,
+      })),
+      ...recentVacancies.map(vac => ({
+        type: 'vacancy',
+        icon: '📋',
+        title: 'شاغر وظيفي جديد',
+        description: `${vac.name} - ${(vac.organization as any)?.ownerName || 'غير محدد'}`,
+        createdAt: (vac as any).createdAt,
       })),
       ...recentOfficeOps.map(op => ({
         type: 'officeOperation',

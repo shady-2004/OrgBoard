@@ -76,12 +76,13 @@ export const LoginPage = () => {
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        {/* Signup disabled - admin creates accounts via Users page */}
+        {/* <div className="mt-6 text-center text-sm text-gray-600">
           {t('auth.dontHaveAccount')}{' '}
           <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
             {t('auth.register')}
           </Link>
-        </div>
+        </div> */}
       </Card>
     </div>
   );

@@ -12,6 +12,7 @@ export const UsersPage = () => {
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState('user'); // Default role
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   
   // Confirm dialog state for delete
@@ -102,7 +103,7 @@ export const UsersPage = () => {
       setToast({ visible: true, message: 'الرجاء إدخال البريد الإلكتروني', type: 'error' });
       return;
     }
-    createMutation.mutate({ email: email.trim() });
+    createMutation.mutate({ email: email.trim(), role });
   };
 
   const handleDelete = (userId, userEmail) => {
@@ -193,10 +194,27 @@ export const UsersPage = () => {
                     placeholder="user@example.com"
                     required
                   />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    الدور
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="user">مستخدم</option>
+                    <option value="moderator">مشرف</option>
+                  </select>
                   <p className="text-sm text-gray-500 mt-2">
-                    ملاحظة: كلمة المرور الافتراضية: <strong>12345678</strong>
+                    • <strong>مستخدم:</strong> يمكنه الإضافة فقط<br/>
+                    • <strong>مشرف:</strong> يمكنه الإضافة والتعديل
                   </p>
                 </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  ملاحظة: كلمة المرور الافتراضية: <strong>12345678</strong>
+                </p>
                 <div className="flex gap-2 justify-end">
                   <Button
                     type="button"
@@ -204,6 +222,7 @@ export const UsersPage = () => {
                     onClick={() => {
                       setShowAddModal(false);
                       setEmail('');
+                      setRole('user');
                     }}
                   >
                     إلغاء
@@ -272,10 +291,12 @@ export const UsersPage = () => {
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         user.role === 'admin' 
-                          ? 'bg-purple-100 text-purple-800' 
+                          ? 'bg-purple-100 text-purple-800'
+                          : user.role === 'moderator'
+                          ? 'bg-green-100 text-green-800' 
                           : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {user.role === 'admin' ? 'مدير' : 'مستخدم'}
+                        {user.role === 'admin' ? 'مدير' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">

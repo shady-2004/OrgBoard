@@ -43,6 +43,7 @@ const getAllOrganizations = catchAsync(async (req: Request, res: Response, next:
   // Aggregation: fetch orgs only
   const organizations = await Organization.aggregate([
     { $match: filter },
+    { $sort: { birthDate: 1 } }, // Sort by birth date (oldest first)
     { $skip: skip },
     { $limit: limit },
     {

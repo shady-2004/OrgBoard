@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedLayout } from '../components/layout/ProtectedLayout';
 import { AdminRoute } from '../components/layout/AdminRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
-import { RegisterPage } from '../pages/auth/RegisterPage';
+// import { RegisterPage } from '../pages/auth/RegisterPage'; // Signup disabled
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { OrganizationDetailPage } from '../pages/organizations/OrganizationDetailPage';
@@ -10,6 +10,7 @@ import { OrganizationEmployeesPage } from '../pages/organizations/OrganizationEm
 import { OrganizationDailyOperationsPage } from '../pages/organizations/OrganizationDailyOperationsPage';
 import { AddOrganizationPage } from '../pages/organizations/AddOrganizationPage';
 import { EditOrganizationPage } from '../pages/organizations/EditOrganizationPage';
+import { AllEmployeesPage } from '../pages/employees/AllEmployeesPage';
 import { AddEmployeePage } from '../pages/employees/AddEmployeePage';
 import { EditEmployeePage } from '../pages/employees/EditEmployeePage';
 import { AddDailyOperationPage } from '../pages/daily-operations/AddDailyOperationPage';
@@ -26,16 +27,14 @@ import { EditSaudizationPage } from '../pages/saudization/EditSaudizationPage';
 import { UsersPage } from '../pages/users/UsersPage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
 
-// Placeholder pages
-const EmployeesPage = () => <div><h1>Employees Page</h1><p>List of employees will appear here</p></div>;
-
 export const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        {/* Register route disabled - admins create users via Users page */}
+        {/* <Route path="/register" element={<RegisterPage />} /> */}
 
         {/* Protected routes */}
         <Route element={<ProtectedLayout />}>
@@ -58,7 +57,7 @@ export const AppRouter = () => {
           <Route path="/organizations/:id/organization-daily-operations" element={<OrganizationDailyOperationsListPage />} />
           
           {/* Employees */}
-          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/employees" element={<AllEmployeesPage />} />
           <Route path="/employees/add" element={<AddEmployeePage />} />
           <Route path="/employees/edit/:id" element={<EditEmployeePage />} />
           

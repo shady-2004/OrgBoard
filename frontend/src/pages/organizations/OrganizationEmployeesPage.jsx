@@ -6,18 +6,20 @@ import { employeesAPI } from '../../api/employees';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { SearchBar } from '../../components/ui/SearchBar';
-import { Table } from '../../components/tables/Table';
+import { EmployeesTable } from '../../components/tables/EmployeesTable';
+import { VacanciesTable } from '../../components/tables/VacanciesTable';
 import { Pagination } from '../../components/tables/Pagination';
 import { Toast } from '../../components/ui/Toast';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useDebounce } from '../../hooks/useDebounce';
-import { formatDate } from '../../utils/formatDate';
+import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 export const OrganizationEmployeesPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,7 +50,16 @@ export const OrganizationEmployeesPage = () => {
   });
 
   const organization = orgData?.data?.organization;
-  const employees = data?.data?.employees || [];
+  const allRecords = data?.data?.employees || [];
+  
+  // Separate employees and vacancies
+  const employees = allRecords.filter(record => record.type === 'employee');
+  const vacancies = allRecords.filter(record => record.type === 'vacancy');
+  
+  // Calculate available vacancy slots (4 - number of actual employees)
+  const maxEmployeesPerOrg = 4;
+  const availableSlots = Math.max(0, maxEmployeesPerOrg - employees.length);
+  
   const totals = totalsData?.data?.totals;
 
   // Delete mutation
@@ -83,6 +94,14 @@ export const OrganizationEmployeesPage = () => {
     if (confirmDialog.employeeId) {
       deleteMutation.mutate(confirmDialog.employeeId);
     }
+  };
+
+  const handleEdit = (employee) => {
+    navigate(`/employees/edit/${employee._id}`);
+  };
+
+  const handleDelete = (employee) => {
+    handleDeleteClick(employee);
   };
 
   if (!organization && !isLoading) {
@@ -139,7 +158,9 @@ export const OrganizationEmployeesPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">موظفو {organization?.ownerName}</h1>
-              <p className="text-gray-600 mt-1">إدارة ومتابعة جميع الموظفين المرتبطين بالمنظمة</p>
+              <p className="text-gray-600 mt-1">
+                إدارة ومتابعة الموظفين ({employees.length}) والشواغر الوظيفية ({vacancies.length})
+              </p>
             </div>
             <div className="flex gap-3">
               <Button variant="secondary" onClick={() => navigate(`/organizations/${id}`)}>
@@ -152,202 +173,188 @@ export const OrganizationEmployeesPage = () => {
           </div>
         </div>
 
-        {/* Financial Summary */}
+        {/* Financial Summary + Insights */}
         {totals && (
-          <Card className="mb-6">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-purple-600">💰</span>
-                الملخص المالي للموظفين
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">إجمالي المطلوب</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {formatCurrency(totals.totalRequested)}
-                  </p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">إجمالي الإيرادات</p>
-                  <p className="text-xl font-bold text-green-600">
-                    {formatCurrency(totals.totalRevenue)}
-                  </p>
-                </div>
-                <div className="bg-red-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">إجمالي المصروفات</p>
-                  <p className="text-xl font-bold text-red-600">
-                    {formatCurrency(totals.totalExpenses)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">صافي الإيرادات</p>
-                  <p className="text-xl font-bold text-blue-600">
-                    {formatCurrency(totals.totalRevenueRemaining)}
-                  </p>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">المتبقي</p>
-                  <p className="text-xl font-bold text-orange-600">
-                    {formatCurrency(totals.totalRemaining)}
-                  </p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* Financial Summary */}
+            <Card className="lg:col-span-2">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-purple-600">💰</span>
+                  الملخص المالي للموظفين
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">إجمالي المطلوب</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatCurrency(totals.totalRequested)}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">إجمالي الإيرادات</p>
+                    <p className="text-xl font-bold text-green-600">
+                      {formatCurrency(totals.totalRevenue)}
+                    </p>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">إجمالي المصروفات</p>
+                    <p className="text-xl font-bold text-red-600">
+                      {formatCurrency(totals.totalExpenses)}
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">صافي الإيرادات</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      {formatCurrency(totals.totalRevenueRemaining)}
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">المتبقي</p>
+                    <p className="text-xl font-bold text-orange-600">
+                      {formatCurrency(totals.totalRemaining)}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+
+            {/* Vacancy Insights */}
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-purple-600">📊</span>
+                  إحصائيات الشواغر
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">عدد الموظفين الحاليين</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {employees.length} / {maxEmployeesPerOrg}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">الشواغر المتاحة</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {availableSlots}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {availableSlots > 0 ? `يمكن إضافة ${availableSlots} موظف` : 'الحد الأقصى مكتمل'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* Search */}
-        {employees.length > 0 && (
+        {(employees.length > 0 || vacancies.length > 0) && (
           <SearchBar
             value={searchTerm}
             onChange={(value) => {
               setSearchTerm(value);
               setPage(1);
             }}
-            placeholder="ابحث عن موظف بالاسم أو رقم الإقامة..."
+            placeholder="ابحث عن موظف أو شاغر وظيفي..."
             showResults={!!debouncedSearch}
             resultsText={debouncedSearch}
             resultsCount={data?.pagination?.total}
           />
         )}
 
-        {/* Employees Table - Only show if there are employees */}
+        {/* Employees Table */}
         {!isLoading && employees.length > 0 && (
-          <Card>
+          <Card className="mb-6">
             <div className="p-6">
-              <Table
-                columns={[
-                  {
-                    label: 'اسم الموظف',
-                    key: 'name',
-                    className: 'text-gray-900 font-medium',
-                  },
-                  {
-                    label: 'رقم الإقامة',
-                    key: 'residencePermitNumber',
-                    className: 'text-gray-600',
-                  },
-                  {
-                    label: 'تاريخ انتهاء الإقامة',
-                    key: 'residencePermitExpiry',
-                    className: 'text-gray-600',
-                    render: (row, value) => {
-                      const expiryDate = new Date(value);
-                      const today = new Date();
-                      const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                      
-                      const isExpired = expiryDate < today;
-                      const isExpiringSoon = expiryDate >= today && expiryDate <= thirtyDaysLater;
-                      
-                      return (
-                        <span className={
-                          isExpired
-                            ? 'text-red-600 font-semibold'
-                            : isExpiringSoon
-                            ? 'text-orange-600 font-semibold'
-                            : ''
-                        }>
-                          {formatDate(value)}
-                          {isExpired && ' (منتهية)'}
-                          {isExpiringSoon && ' (قريبة الانتهاء)'}
-                        </span>
-                      );
-                    },
-                  },
-                  {
-                    label: 'المبلغ المطلوب',
-                    key: 'requestedAmount',
-                    className: 'text-gray-900',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    label: 'الإيرادات',
-                    key: 'totalRevenue',
-                    className: 'text-green-600',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    label: 'المصروفات',
-                    key: 'totalExpenses',
-                    className: 'text-red-600',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    label: 'المتبقي',
-                    key: 'remaining',
-                    className: 'text-orange-600 font-semibold',
-                    render: (row, value) => formatCurrency(value || 0),
-                  },
-                  {
-                    key: 'actions',
-                    render: (row) => (
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => navigate(`/employees/edit/${row._id}`)}
-                        >
-                          تعديل
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDeleteClick(row)}
-                        >
-                          حذف
-                        </Button>
-                      </div>
-                    ),
-                  },
-                ]}
-                data={employees}
-                keyField="_id"
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="text-blue-600">👥</span>
+                الموظفون ({employees.length})
+              </h3>
+              <EmployeesTable
+                employees={employees}
+                user={user}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
                 loading={isLoading}
-                loadingMessage="جاري تحميل الموظفين..."
                 emptyMessage={
                   debouncedSearch
                     ? `لا توجد نتائج للبحث عن "${debouncedSearch}"`
-                    : 'لا يوجد موظفون مرتبطون بهذه المنظمة'
+                    : 'لا يوجد موظفون'
                 }
+                showOrganization={false}
+                showFinancials={true}
+                showViewButton={false}
               />
+            </div>
+          </Card>
+        )}
 
-              {/* Pagination */}
-              {data?.pagination && data.pagination.totalPages > 1 && (
-                <div className="mt-6">
-                  <Pagination
-                    currentPage={page}
-                    totalPages={data.pagination.totalPages}
-                    totalItems={data.pagination.total}
-                    itemsPerPage={data.results}
-                    onPageChange={setPage}
-                    hasNext={!!data.pagination.next}
-                    hasPrevious={!!data.pagination.previous}
-                    itemLabel="موظف"
-                  />
-                </div>
-              )}
+        {/* Vacancies Table */}
+        {!isLoading && vacancies.length > 0 && (
+          <Card className="mb-6">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="text-purple-600">📋</span>
+                الشواغر الوظيفية ({vacancies.length})
+              </h3>
+              <VacanciesTable
+                vacancies={vacancies}
+                user={user}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                loading={isLoading}
+                emptyMessage={
+                  debouncedSearch
+                    ? `لا توجد نتائج للبحث عن "${debouncedSearch}"`
+                    : 'لا توجد شواغر وظيفية'
+                }
+                showOrganization={false}
+              />
+            </div>
+          </Card>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && (employees.length > 0 || vacancies.length > 0) && data?.pagination && data.pagination.totalPages > 1 && (
+          <Card>
+            <div className="p-6">
+              <Pagination
+                currentPage={page}
+                totalPages={data.pagination.totalPages}
+                totalItems={data.pagination.total}
+                itemsPerPage={data.results}
+                onPageChange={setPage}
+                hasNext={!!data.pagination.next}
+                hasPrevious={!!data.pagination.previous}
+                itemLabel="سجل"
+              />
             </div>
           </Card>
         )}
 
         {/* Empty State with Action */}
-        {!isLoading && employees.length === 0 && (
+        {!isLoading && employees.length === 0 && vacancies.length === 0 && (
           <Card>
             <div className="p-12 text-center">
               <div className="text-gray-400 text-6xl mb-4">👥</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                {debouncedSearch ? 'لا توجد نتائج للبحث' : 'لا يوجد موظفون بعد'}
+                {debouncedSearch ? 'لا توجد نتائج للبحث' : 'لا يوجد موظفون أو شواغر وظيفية بعد'}
               </h3>
               <p className="text-gray-600 mb-6">
                 {debouncedSearch 
-                  ? `لم يتم العثور على موظفين يحتوون على "${debouncedSearch}"`
-                  : 'ابدأ بإضافة أول موظف لهذه المنظمة'
+                  ? `لم يتم العثور على نتائج تحتوي على "${debouncedSearch}"`
+                  : 'ابدأ بإضافة موظف أو شاغر وظيفي لهذه المنظمة'
                 }
               </p>
               {!debouncedSearch && (
-                <Button onClick={() => navigate(`/employees/add?organizationId=${id}`)}>
-                  + إضافة أول موظف
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={() => navigate(`/employees/add?organizationId=${id}`)}>
+                    + إضافة موظف
+                  </Button>
+                  <Button variant="secondary" onClick={() => navigate(`/employees/add?organizationId=${id}`)}>
+                    + إضافة شاغر وظيفي
+                  </Button>
+                </div>
               )}
             </div>
           </Card>

@@ -9,14 +9,17 @@ import { Table } from '../../components/tables/Table';
 import { Pagination } from '../../components/tables/Pagination';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Toast } from '../../components/ui/Toast';
+import { useDebounce } from '../../hooks/useDebounce';
+import { useAuth } from '../../hooks/useAuth';
+import { canEdit, canDelete } from '../../utils/permissions';
 import { formatDate } from '../../utils/formatDate';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { useDebounce } from '../../hooks/useDebounce';
 
 export const OrganizationDailyOperationsListPage = () => {
   const { id: organizationId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [page, setPage] = useState(1);
   const [startDate, setStartDate] = useState('');
@@ -243,20 +246,24 @@ export const OrganizationDailyOperationsListPage = () => {
                     key: 'actions',
                     render: (row) => (
                       <div className="flex gap-2 justify-end">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => navigate(`/organization-daily-operations/edit/${row._id}`)}
-                        >
-                          تعديل
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDeleteClick(row)}
-                        >
-                          حذف
-                        </Button>
+                        {canEdit(user?.role) && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => navigate(`/organization-daily-operations/edit/${row._id}`)}
+                          >
+                            تعديل
+                          </Button>
+                        )}
+                        {canDelete(user?.role) && (
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDeleteClick(row)}
+                          >
+                            حذف
+                          </Button>
+                        )}
                       </div>
                     ),
                   },

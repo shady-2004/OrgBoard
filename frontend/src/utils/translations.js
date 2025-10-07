@@ -56,6 +56,7 @@ export const translations = {
     dashboard: 'لوحة التحكم',
     users: 'المستخدمون',
     organizations: 'المنظمات',
+    employees: 'الموظفون',
     dailyOperations: 'العمليات اليومية',
     officeOperations: 'عمليات المكتب',
     saudization: 'السعودة',
@@ -110,6 +111,9 @@ export const translations = {
     status: 'الحالة',
     actions: 'الإجراءات',
     noUsers: 'لا يوجد مستخدمون',
+    admin: 'مدير',
+    moderator: 'مشرف',
+    user: 'مستخدم',
   },
 
   // Daily Operations
