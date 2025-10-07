@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedLayout } from '../components/layout/ProtectedLayout';
 import { AdminRoute } from '../components/layout/AdminRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
-import { RegisterPage } from '../pages/auth/RegisterPage';
+// import { RegisterPage } from '../pages/auth/RegisterPage'; // Signup disabled
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { OrganizationDetailPage } from '../pages/organizations/OrganizationDetailPage';
@@ -33,7 +33,8 @@ export const AppRouter = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        {/* Register route disabled - admins create users via Users page */}
+        {/* <Route path="/register" element={<RegisterPage />} /> */}
 
         {/* Protected routes */}
         <Route element={<ProtectedLayout />}>
