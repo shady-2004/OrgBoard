@@ -7,7 +7,6 @@
     /* Paths */
     "rootDir": "./src",
     "outDir": "./dist",
-    "typeRoots": ["./node_modules/@types", "./src/types"],
 
     /* Strictness */
     "strict": true,
@@ -22,6 +21,6 @@
     /* Source Maps (for debugging) */
     "sourceMap": true
   },
-  "include": ["src"],
+  "include": ["src", "src/types"],
   "exclude": ["node_modules", "dist"]
 }
