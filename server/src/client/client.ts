@@ -24,7 +24,11 @@ async function connect() {
   await mongoose.connect(uri, clientOptions);
 
   mongoose.connection.once("open", async () => {
-    await mongoose.connection.db.admin().ping();
+    if (mongoose.connection.db) {
+      await mongoose.connection.db.admin().ping();
+    } else {
+      throw new Error("Database connection is undefined.");
+    }
     console.log("Successfully connected and pinged MongoDB!");
   });
 }
