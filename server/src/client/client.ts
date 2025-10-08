@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// Disable buffering globally - critical for serverless
+mongoose.set('bufferCommands', false);
+mongoose.set('bufferTimeoutMS', 10000);
+
 // Global cache for connection in serverless environments (Vercel)
 type CachedConnection = {
   conn: typeof mongoose | null;

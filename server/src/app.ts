@@ -8,6 +8,7 @@ import xss from "xss-clean";
 import router from "./routes/routes";
 import globalErrorHanlder from "./controllers/error.controller";
 import cookieParser from "cookie-parser";
+import { ensureDbConnection } from "./middlewares/dbConnection";
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -40,6 +41,10 @@ app.use("/OrgBoard/api/v1", limiter);
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("combined"));
 }
+
+// Ensure database connection before processing any API requests
+// Critical for serverless environments (Vercel, AWS Lambda, etc.)
+app.use("/OrgBoard/api/v1", ensureDbConnection);
 
 app.use("/OrgBoard/api/v1", router);
 
