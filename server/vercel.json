@@ -1,14 +1,12 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+  "functions": {
+    "dist/index.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30,
+      "memory": 512
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
