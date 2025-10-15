@@ -4,7 +4,7 @@ export interface IOfficeOperation extends Document {
   date: Date;                         // التاريخ
   amount: number;                     // المبلغ
   type: 'expense' | 'revenue';        // نوع العملية
-  paymentMethod: 'cash' | 'bank' | 'credit' | 'other'; // طريقة الدفع
+  paymentMethod: 'cash' | 'transfer' | 'mada' | 'visa' | 'other'; // طريقة الدفع
   notes?: string;                     // ملاحظات
 }
 
@@ -36,8 +36,8 @@ const officeOperationSchema = new Schema<IOfficeOperation>(
       type: String,
       required: [true, 'Payment method is required'],
       enum: {
-        values: ['cash', 'bank', 'credit', 'other'],
-        message: 'Payment method must be one of: cash, bank, credit, other'
+        values: ['cash', 'transfer', 'mada', 'visa', 'other'],
+        message: 'Payment method must be one of: cash, transfer, mada, visa, other'
       }
     },
     notes: {

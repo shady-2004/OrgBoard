@@ -267,9 +267,11 @@ export const AddDailyOperationPage = () => {
                     errors.paymentMethod ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
-                  <option value="cash">نقدي</option>
+                  <option value="cash">كاش</option>
                   <option value="transfer">تحويل بنكي</option>
-                  <option value="check">شيك</option>
+                  <option value="mada">شبكة</option>
+                  <option value="visa">فيزا</option>
+                  <option value="other">أخرى</option>
                 </select>
                 {errors.paymentMethod && (
                   <p className="mt-1 text-sm text-red-600">{errors.paymentMethod.message}</p>

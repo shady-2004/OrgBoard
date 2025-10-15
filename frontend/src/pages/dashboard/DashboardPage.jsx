@@ -10,15 +10,57 @@ import { useNavigate } from 'react-router-dom';
 import { Pagination } from '../../components/tables/Pagination';
 import { useState } from 'react';
 
+// Helper function to get month name in Arabic
+const getMonthName = (month) => {
+  const months = {
+    '1': 'يناير', '2': 'فبراير', '3': 'مارس', '4': 'أبريل',
+    '5': 'مايو', '6': 'يونيو', '7': 'يوليو', '8': 'أغسطس',
+    '9': 'سبتمبر', '10': 'أكتوبر', '11': 'نوفمبر', '12': 'ديسمبر'
+  };
+  return months[month] || month;
+};
+
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const [expiredPage, setExpiredPage] = useState(1);
   const [nearlyExpiredPage, setNearlyExpiredPage] = useState(1);
+  
+  // Separate filters for Office Operations
+  const [officeYear, setOfficeYear] = useState('');
+  const [officeMonth, setOfficeMonth] = useState('');
+  
+  // Separate filters for Daily Operations
+  const [dailyYear, setDailyYear] = useState('');
+  const [dailyMonth, setDailyMonth] = useState('');
+  
   const limit = 5;
 
+  // Main stats (not filtered)
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboardStats'],
-    queryFn: dashboardAPI.getStats,
+    queryFn: () => dashboardAPI.getStats(),
+  });
+
+  // Office Operations Financials (separate query with its own filters)
+  const { data: officeFinancials, isLoading: officeLoading } = useQuery({
+    queryKey: ['officeOperationsFinancials', officeMonth, officeYear],
+    queryFn: () => {
+      const params = {};
+      if (officeMonth) params.month = officeMonth;
+      if (officeYear) params.year = officeYear;
+      return dashboardAPI.getOfficeOperationsFinancials(params);
+    },
+  });
+
+  // Daily Operations Financials (separate query with its own filters)
+  const { data: dailyFinancials, isLoading: dailyLoading } = useQuery({
+    queryKey: ['dailyOperationsFinancials', dailyMonth, dailyYear],
+    queryFn: () => {
+      const params = {};
+      if (dailyMonth) params.month = dailyMonth;
+      if (dailyYear) params.year = dailyYear;
+      return dashboardAPI.getDailyOperationsFinancials(params);
+    },
   });
 
   const { data: expiredData } = useQuery({
@@ -37,6 +79,8 @@ export const DashboardPage = () => {
   });
 
   const statsData = stats?.data || {};
+  const officeFinancialsData = officeFinancials?.data || {};
+  const dailyFinancialsData = dailyFinancials?.data || {};
   const expiredEmployees = expiredData?.data?.employees || [];
   const nearlyExpiredEmployees = nearlyExpiredData?.data?.employees || [];
   const activities = activitiesData?.data?.activities || [];
@@ -78,7 +122,7 @@ export const DashboardPage = () => {
       value: statsData.dailyOperations || 0, 
       icon: '📝', 
       color: 'bg-amber-500',
-      link: null
+      link: '/organizations' // Navigate to organizations as daily ops are per organization
     },
   ];
 
@@ -88,40 +132,46 @@ export const DashboardPage = () => {
       value: statsData.expiredEmployees || 0, 
       icon: '⚠️', 
       color: 'bg-red-500',
-      severity: 'danger'
+      severity: 'danger',
+      scrollTo: 'expired-section'
     },
     { 
       title: 'إقامات قريبة الانتهاء', 
       value: statsData.nearlyExpiredEmployees || 0, 
       icon: '⏰', 
       color: 'bg-orange-500',
-      severity: 'warning'
+      severity: 'warning',
+      scrollTo: 'expiring-section'
     },
   ];
 
-    const officeOpsChartData = [
+  const officeOpsChartData = [
     {
       label: 'الإيرادات',
-      value: statsData.officeOperationsFinancials?.totalRevenue || 0,
+      value: officeFinancialsData.totalRevenue || 0,
       color: '#10b981'
     },
     {
       label: 'المصروفات',
-      value: statsData.officeOperationsFinancials?.totalExpenses || 0,
+      value: officeFinancialsData.totalExpenses || 0,
       color: '#ef4444'
     },
-  ];  const dailyOpsChartData = [
+  ];
+  
+  const dailyOpsChartData = [
     {
       label: 'الإيرادات',
-      value: statsData.dailyOperationsFinancials?.totalRevenue || 0,
+      value: dailyFinancialsData.totalRevenue || 0,
       color: '#10b981'
     },
     {
       label: 'المصروفات',
-      value: statsData.dailyOperationsFinancials?.totalExpenses || 0,
+      value: dailyFinancialsData.totalExpenses || 0,
       color: '#ef4444'
     },
-  ];  if (statsLoading) {
+  ];
+
+  if (statsLoading) {
     return (
       <div>
         <div className="mb-8">
@@ -196,7 +246,18 @@ export const DashboardPage = () => {
       {/* Alert Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {alertStats.map((stat, index) => (
-          <Card key={index}>
+          <Card 
+            key={index}
+            className="cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => {
+              if (stat.scrollTo) {
+                const element = document.getElementById(stat.scrollTo);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }
+            }}
+          >
             <div className="flex items-center gap-4">
               <div className={`${stat.color} w-16 h-16 rounded-lg flex items-center justify-center text-3xl shadow-md`}>
                 {stat.icon}
@@ -248,52 +309,209 @@ export const DashboardPage = () => {
         </div>
       </Card>
 
+      {/* Financial Statistics Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Office Operations Financials */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">الإحصائيات المالية لعمليات المكتب</h3>
-            <SimplePieChart data={officeOpsChartData} />
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-gray-600">الإيرادات</div>
-                <div className="text-xl font-bold text-green-600">
-                  {formatCurrency(statsData.officeOperationsFinancials?.totalRevenue || 0)}
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="text-2xl">🏭</span>
+              الإحصائيات المالية لعمليات المكتب
+            </h3>
+            
+            {/* Office Operations Filters */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    السنة
+                  </label>
+                  <select
+                    value={officeYear}
+                    onChange={(e) => {
+                      setOfficeYear(e.target.value);
+                      if (!e.target.value) setOfficeMonth(''); // Clear month if year is cleared
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">كل السنوات</option>
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    الشهر
+                  </label>
+                  <select
+                    value={officeMonth}
+                    onChange={(e) => setOfficeMonth(e.target.value)}
+                    disabled={!officeYear}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">كل الشهور</option>
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                  </select>
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">المصروفات</div>
-                <div className="text-xl font-bold text-red-600">
-                  {formatCurrency(statsData.officeOperationsFinancials?.totalExpenses || 0)}
+              {(officeMonth || officeYear) && (
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-xs text-blue-600">
+                    📌 {officeMonth && officeYear ? `${getMonthName(officeMonth)} ${officeYear}` : officeYear ? `سنة ${officeYear}` : 'كل البيانات'}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setOfficeYear('');
+                      setOfficeMonth('');
+                    }}
+                    className="text-xs text-gray-600 hover:text-red-600 underline"
+                  >
+                    إعادة تعيين
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
+
+            {officeLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                <SimplePieChart data={officeOpsChartData} />
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600">الإيرادات</div>
+                    <div className="text-xl font-bold text-green-600">
+                      {formatCurrency(officeFinancialsData.totalRevenue || 0)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600">المصروفات</div>
+                    <div className="text-xl font-bold text-red-600">
+                      {formatCurrency(officeFinancialsData.totalExpenses || 0)}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </Card>
 
+        {/* Daily Operations Financials */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">الإحصائيات المالية للعمليات اليومية</h3>
-            <SimplePieChart data={dailyOpsChartData} />
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-gray-600">الإيرادات</div>
-                <div className="text-xl font-bold text-green-600">
-                  {formatCurrency(statsData.dailyOperationsFinancials?.totalRevenue || 0)}
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="text-2xl">📝</span>
+              الإحصائيات المالية للعمليات اليومية
+            </h3>
+            
+            {/* Daily Operations Filters */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    السنة
+                  </label>
+                  <select
+                    value={dailyYear}
+                    onChange={(e) => {
+                      setDailyYear(e.target.value);
+                      if (!e.target.value) setDailyMonth(''); // Clear month if year is cleared
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">كل السنوات</option>
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    الشهر
+                  </label>
+                  <select
+                    value={dailyMonth}
+                    onChange={(e) => setDailyMonth(e.target.value)}
+                    disabled={!dailyYear}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">كل الشهور</option>
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                  </select>
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">المصروفات</div>
-                <div className="text-xl font-bold text-red-600">
-                  {formatCurrency(statsData.dailyOperationsFinancials?.totalExpenses || 0)}
+              {(dailyMonth || dailyYear) && (
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-xs text-blue-600">
+                    📌 {dailyMonth && dailyYear ? `${getMonthName(dailyMonth)} ${dailyYear}` : dailyYear ? `سنة ${dailyYear}` : 'كل البيانات'}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setDailyYear('');
+                      setDailyMonth('');
+                    }}
+                    className="text-xs text-gray-600 hover:text-red-600 underline"
+                  >
+                    إعادة تعيين
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
+
+            {dailyLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                <SimplePieChart data={dailyOpsChartData} />
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600">الإيرادات</div>
+                    <div className="text-xl font-bold text-green-600">
+                      {formatCurrency(dailyFinancialsData.totalRevenue || 0)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600">المصروفات</div>
+                    <div className="text-xl font-bold text-red-600">
+                      {formatCurrency(dailyFinancialsData.totalExpenses || 0)}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card id="expired-section" className="scroll-mt-6">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <span className="text-2xl">⚠️</span>
@@ -307,23 +525,36 @@ export const DashboardPage = () => {
                   {expiredEmployees.map((employee) => (
                     <div 
                       key={employee._id} 
-                      className="flex justify-between items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                      className="flex flex-col gap-2 p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/organizations/${employee.organization?._id}/employees`)}
                     >
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-800">{employee.name}</div>
-                        <div className="text-sm text-gray-600">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">{employee.name}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            الجنسية: {employee.nationality || 'غير محدد'}
+                          </div>
+                        </div>
+                        <div className="text-xs text-red-600 font-medium bg-red-100 px-2 py-1 rounded">
+                          منتهية
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="text-gray-600">
                           المنظمة: {' '}
-                          <span 
-                            className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
-                            onClick={() => navigate(`/organizations/${employee.organization?._id}`)}
-                          >
+                          <span className="text-blue-600 font-medium">
                             {employee.organization?.ownerName || 'غير محدد'}
                           </span>
                         </div>
+                        <div className="text-red-700 font-medium">
+                          {formatDate(employee.residencePermitExpiry)}
+                        </div>
                       </div>
-                      <div className="text-sm text-red-600 font-medium">
-                        {formatDate(employee.residenceExpiryDate)}
-                      </div>
+                      {employee.phoneNumber && (
+                        <div className="text-xs text-gray-500">
+                          📱 {employee.phoneNumber}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -347,7 +578,7 @@ export const DashboardPage = () => {
           </div>
         </Card>
 
-        <Card>
+        <Card id="expiring-section" className="scroll-mt-6">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <span className="text-2xl">⏰</span>
@@ -361,23 +592,36 @@ export const DashboardPage = () => {
                   {nearlyExpiredEmployees.map((employee) => (
                     <div 
                       key={employee._id} 
-                      className="flex justify-between items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                      className="flex flex-col gap-2 p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/organizations/${employee.organization?._id}/employees`)}
                     >
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-800">{employee.name}</div>
-                        <div className="text-sm text-gray-600">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">{employee.name}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            الجنسية: {employee.nationality || 'غير محدد'}
+                          </div>
+                        </div>
+                        <div className="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded">
+                          قريبة الانتهاء
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="text-gray-600">
                           المنظمة: {' '}
-                          <span 
-                            className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
-                            onClick={() => navigate(`/organizations/${employee.organization?._id}`)}
-                          >
+                          <span className="text-blue-600 font-medium">
                             {employee.organization?.ownerName || 'غير محدد'}
                           </span>
                         </div>
+                        <div className="text-orange-700 font-medium">
+                          {formatDate(employee.residencePermitExpiry)}
+                        </div>
                       </div>
-                      <div className="text-sm text-orange-600 font-medium">
-                        {formatDate(employee.residenceExpiryDate)}
-                      </div>
+                      {employee.phoneNumber && (
+                        <div className="text-xs text-gray-500">
+                          📱 {employee.phoneNumber}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -26,7 +26,7 @@ export const dailyOperationSchemaZod = z.object({
     error: "Category is required",
   }),
 
-  paymentMethod: z.enum(["cash", "bank", "credit", "other"], {
+  paymentMethod: z.enum(["cash", "transfer", "mada", "visa", "other"], {
     error: "Payment method is required",
   }),
 

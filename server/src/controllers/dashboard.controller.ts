@@ -10,6 +10,24 @@ import mongoose from "mongoose";
 // Get dashboard statistics
 export const getDashboardStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Get optional month and year filters from query params
+    const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+    const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+
+    // Build date filter for operations if month/year provided
+    let dateFilter: any = {};
+    if (month && year) {
+      // Filter for specific month and year
+      const startDate = new Date(year, month - 1, 1); // month is 1-based in query, 0-based in Date
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999); // Last day of month
+      dateFilter = { $gte: startDate, $lte: endDate };
+    } else if (year) {
+      // Filter for entire year
+      const startDate = new Date(year, 0, 1);
+      const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      dateFilter = { $gte: startDate, $lte: endDate };
+    }
+
     // Count total organizations
     const totalOrganizations = await Organization.countDocuments();
 
@@ -80,7 +98,13 @@ export const getDashboardStats = catchAsync(
 
     // Daily operations financial insights - use same structure as employee totals
     // Daily operations use 'amount' and 'category' fields
+    const dailyOpsMatch: any = {};
+    if (Object.keys(dateFilter).length > 0) {
+      dailyOpsMatch.date = dateFilter;
+    }
+
     const dailyOpsFinancials = await DailyOperation.aggregate([
+      ...(Object.keys(dailyOpsMatch).length > 0 ? [{ $match: dailyOpsMatch }] : []),
       {
         $group: {
           _id: null,
@@ -95,7 +119,13 @@ export const getDashboardStats = catchAsync(
     ]);
 
     // Office operations financial insights
+    const officeOpsMatch: any = {};
+    if (Object.keys(dateFilter).length > 0) {
+      officeOpsMatch.date = dateFilter;
+    }
+
     const officeOpsFinancials = await OfficeOperation.aggregate([
+      ...(Object.keys(officeOpsMatch).length > 0 ? [{ $match: officeOpsMatch }] : []),
       {
         $group: {
           _id: "$type",
@@ -135,6 +165,102 @@ export const getDashboardStats = catchAsync(
           totalExpenses: officeExpenses,
           net: officeRevenue - officeExpenses,
         },
+      },
+    });
+  }
+);
+
+// Get office operations financial statistics with optional filters
+export const getOfficeOperationsFinancials = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+    const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+
+    let dateFilter: any = {};
+    if (month && year) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+      dateFilter = { $gte: startDate, $lte: endDate };
+    } else if (year) {
+      const startDate = new Date(year, 0, 1);
+      const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      dateFilter = { $gte: startDate, $lte: endDate };
+    }
+
+    const officeOpsMatch: any = {};
+    if (Object.keys(dateFilter).length > 0) {
+      officeOpsMatch.date = dateFilter;
+    }
+
+    const officeOpsFinancials = await OfficeOperation.aggregate([
+      ...(Object.keys(officeOpsMatch).length > 0 ? [{ $match: officeOpsMatch }] : []),
+      {
+        $group: {
+          _id: "$type",
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const officeRevenue = officeOpsFinancials.find(op => op._id === 'revenue')?.total || 0;
+    const officeExpenses = officeOpsFinancials.find(op => op._id === 'expense')?.total || 0;
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        totalRevenue: officeRevenue,
+        totalExpenses: officeExpenses,
+        net: officeRevenue - officeExpenses,
+        filters: { month, year }
+      },
+    });
+  }
+);
+
+// Get daily operations financial statistics with optional filters
+export const getDailyOperationsFinancials = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+    const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+
+    let dateFilter: any = {};
+    if (month && year) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+      dateFilter = { $gte: startDate, $lte: endDate };
+    } else if (year) {
+      const startDate = new Date(year, 0, 1);
+      const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      dateFilter = { $gte: startDate, $lte: endDate };
+    }
+
+    const dailyOpsMatch: any = {};
+    if (Object.keys(dateFilter).length > 0) {
+      dailyOpsMatch.date = dateFilter;
+    }
+
+    const dailyOpsFinancials = await DailyOperation.aggregate([
+      ...(Object.keys(dailyOpsMatch).length > 0 ? [{ $match: dailyOpsMatch }] : []),
+      {
+        $group: {
+          _id: null,
+          totalRevenue: {
+            $sum: { $cond: [{ $eq: ["$category", "revenue"] }, "$amount", 0] },
+          },
+          totalExpenses: {
+            $sum: { $cond: [{ $eq: ["$category", "expense"] }, "$amount", 0] },
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        totalRevenue: dailyOpsFinancials[0]?.totalRevenue || 0,
+        totalExpenses: dailyOpsFinancials[0]?.totalExpenses || 0,
+        net: (dailyOpsFinancials[0]?.totalRevenue || 0) - (dailyOpsFinancials[0]?.totalExpenses || 0),
+        filters: { month, year }
       },
     });
   }

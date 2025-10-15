@@ -3,12 +3,16 @@ import {
   getDashboardStats, 
   getOrganizationsTrend,
   getOfficeOperationsTrend,
-  getRecentActivities
+  getRecentActivities,
+  getOfficeOperationsFinancials,
+  getDailyOperationsFinancials
 } from "../controllers/dashboard.controller";
 
 const router = Router();
 
 router.get("/stats", getDashboardStats);
+router.get("/financials/office-operations", getOfficeOperationsFinancials);
+router.get("/financials/daily-operations", getDailyOperationsFinancials);
 router.get("/trends/organizations", getOrganizationsTrend);
 router.get("/trends/office-operations", getOfficeOperationsTrend);
 router.get("/activities", getRecentActivities);

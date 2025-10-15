@@ -17,8 +17,8 @@ export const officeOperationSchemaZod = z.object({
     error: 'Type must be either "expense" or "revenue"',
   }),
 
-  paymentMethod: z.enum(["cash", "bank", "credit", "other"], {
-    error: "Payment method must be one of: cash, bank, credit, other",
+  paymentMethod: z.enum(["cash", "transfer", "mada", "visa", "other"], {
+    error: "Payment method must be one of: cash, transfer, mada, visa, other",
   }),
 
   notes: z

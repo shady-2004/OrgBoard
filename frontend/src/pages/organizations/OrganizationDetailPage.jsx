@@ -163,14 +163,14 @@ export const OrganizationDetailPage = () => {
                 <p className="text-base font-medium text-gray-900">{organization.commercialRecordNumber}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">تاريخ السجل التجاري</p>
+                <p className="text-sm text-gray-500">{t('organizations.commercialRecordDate')}</p>
                 <p className="text-base font-medium text-gray-900">
                   {organization.commercialRecordDate ? formatDate(organization.commercialRecordDate) : '-'}
                 </p>
               </div>
               {organization.qawiSubscriptionDate && (
                 <div>
-                  <p className="text-sm text-gray-500">تاريخ اشتراك قوى</p>
+                  <p className="text-sm text-gray-500">{t('organizations.qawiSubscriptionDate')}</p>
                   <p className="text-base font-medium text-gray-900">
                     {formatDate(organization.qawiSubscriptionDate)}
                   </p>
@@ -178,7 +178,7 @@ export const OrganizationDetailPage = () => {
               )}
               {organization.absherSubscriptionDate && (
                 <div>
-                  <p className="text-sm text-gray-500">تاريخ اشتراك أبشر</p>
+                  <p className="text-sm text-gray-500">{t('organizations.absherSubscriptionDate')}</p>
                   <p className="text-base font-medium text-gray-900">
                     {formatDate(organization.absherSubscriptionDate)}
                   </p>
@@ -199,7 +199,7 @@ export const OrganizationDetailPage = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-500">مبلغ الكفيل</p>
+                <p className="text-sm text-gray-500">{t('organizations.sponsorAmount')}</p>
                 <p className="text-xl font-bold text-gray-900">
                   {formatCurrency(organization.sponsorAmount)}
                 </p>

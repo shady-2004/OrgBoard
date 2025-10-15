@@ -272,7 +272,7 @@ export const AddOrganizationPage = () => {
                   {/* Qawi Subscription Date */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      تاريخ اشتراك قوى
+                      {t('organizations.qawiSubscriptionDate')}
                     </label>
                     <Input
                       type="date"
@@ -299,7 +299,7 @@ export const AddOrganizationPage = () => {
                   {/* Absher Subscription Date */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      تاريخ اشتراك أبشر
+                      {t('organizations.absherSubscriptionDate')}
                     </label>
                     <Input
                       type="date"
@@ -356,7 +356,7 @@ export const AddOrganizationPage = () => {
                   {/* Commercial Record Date */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      تاريخ السجل التجاري
+                      {t('organizations.commercialRecordDate')}
                     </label>
                     <Input
                       type="date"
@@ -395,7 +395,7 @@ export const AddOrganizationPage = () => {
                   {/* Sponsor Amount */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      مبلغ الكفيل (ريال) <span className="text-red-500">*</span>
+                      {t('organizations.sponsorAmount')} <span className="text-red-500">*</span>
                     </label>
                     <Input
                       type="number"

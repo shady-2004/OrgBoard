@@ -72,9 +72,10 @@ export const AddOfficeOperationPage = () => {
 
   // Payment method options
   const paymentMethodOptions = [
-    { value: 'cash', label: 'نقدي' },
-    { value: 'bank', label: 'بنكي' },
-    { value: 'credit', label: 'بطاقة ائتمان' },
+    { value: 'cash', label: 'كاش' },
+    { value: 'transfer', label: 'تحويل بنكي' },
+    { value: 'mada', label: 'شبكة' },
+    { value: 'visa', label: 'فيزا' },
     { value: 'other', label: 'أخرى' },
   ];
 

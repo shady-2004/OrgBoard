@@ -6,7 +6,7 @@ export interface IDailyOperation extends Document {
   date: Date;                          // التاريخ
   amount: number;                      // المبلغ
   category: 'expense' | 'revenue';     // التصنيف
-  paymentMethod: 'cash' | 'bank' | 'credit' | 'other'; // طريقة الدفع
+  paymentMethod: 'cash' | 'transfer' | 'mada' | 'visa' | 'other'; // طريقة الدفع
   invoice?: string;                    // فاتورة (رقم أو رابط)
   notes?: string;                      // ملاحظات
 }
@@ -49,8 +49,8 @@ const dailyOperationSchema = new Schema<IDailyOperation>(
       type: String,
       required: [true, 'Payment method is required'],
       enum: {
-        values: ['cash', 'bank', 'credit', 'other'],
-        message: 'Payment method must be one of: cash, bank, credit, other'
+        values: ['cash', 'transfer', 'mada', 'visa', 'other'],
+        message: 'Payment method must be one of: cash, transfer, mada, visa, other'
       }
     },
     invoice: {
