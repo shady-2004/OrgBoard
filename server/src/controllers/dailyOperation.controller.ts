@@ -89,14 +89,25 @@ const getAllDailyOperations = catchAsync(async (req: Request, res: Response, nex
   const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
   const skip = (page - 1) * limit;
 
-  const { startDate, endDate, organizationName, employeeName } = req.query;
+  const { startDate, endDate, organization, search } = req.query;
 
   // Build match conditions
   const match: any = {};
+  
+  // Filter by date range
   if (startDate || endDate) {
     match.date = {};
     if (startDate) match.date.$gte = new Date(startDate as string);
-    if (endDate) match.date.$lte = new Date(endDate as string);
+    if (endDate) {
+      const end = new Date(endDate as string);
+      end.setHours(23, 59, 59, 999);
+      match.date.$lte = end;
+    }
+  }
+
+  // Filter by organization ID
+  if (organization && mongoose.Types.ObjectId.isValid(organization as string)) {
+    match.organization = new mongoose.Types.ObjectId(organization as string);
   }
 
   const aggregatePipeline: any[] = [
@@ -123,39 +134,34 @@ const getAllDailyOperations = catchAsync(async (req: Request, res: Response, nex
       },
     },
     { $unwind: "$employee" },
-
-    // Pick only needed fields
-    {
-      $project: {
-        date: 1,
-        amount: 1,
-        category: 1,
-        paymentMethod: 1,
-        invoice: 1,
-        notes: 1,
-        "organization.ownerName": 1,
-        "employee.name": 1,
-      },
-    },
   ];
 
-  // Add optional regex filters
-  const nameFilters: any[] = [];
-  if (organizationName) {
-    nameFilters.push({
-      "organization.ownerName": { $regex: organizationName, $options: "i" },
+  // Add search filter by employee name
+  if (search) {
+    aggregatePipeline.push({
+      $match: {
+        "employee.name": { $regex: search, $options: "i" }
+      }
     });
-  }
-  if (employeeName) {
-    nameFilters.push({
-      "employee.name": { $regex: employeeName, $options: "i" },
-    });
-  }
-  if (nameFilters.length > 0) {
-    aggregatePipeline.push({ $match: { $and: nameFilters } });
   }
 
-  // Sort by date
+  // Project fields
+  aggregatePipeline.push({
+    $project: {
+      date: 1,
+      amount: 1,
+      category: 1,
+      paymentMethod: 1,
+      invoice: 1,
+      notes: 1,
+      "organization._id": 1,
+      "organization.ownerName": 1,
+      "employee._id": 1,
+      "employee.name": 1,
+    },
+  });
+
+  // Sort by date (most recent first)
   aggregatePipeline.push({ $sort: { date: -1 } });
 
   // Count total documents

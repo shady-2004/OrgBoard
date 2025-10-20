@@ -13,6 +13,7 @@ import { EditOrganizationPage } from '../pages/organizations/EditOrganizationPag
 import { AllEmployeesPage } from '../pages/employees/AllEmployeesPage';
 import { AddEmployeePage } from '../pages/employees/AddEmployeePage';
 import { EditEmployeePage } from '../pages/employees/EditEmployeePage';
+import { DailyOperationsListPage } from '../pages/daily-operations/DailyOperationsListPage';
 import { AddDailyOperationPage } from '../pages/daily-operations/AddDailyOperationPage';
 import { EditDailyOperationPage } from '../pages/daily-operations/EditDailyOperationPage';
 import { OrganizationDailyOperationsListPage } from '../pages/organization-daily-operations/OrganizationDailyOperationsListPage';
@@ -62,6 +63,7 @@ export const AppRouter = () => {
           <Route path="/employees/edit/:id" element={<EditEmployeePage />} />
           
           {/* Daily Operations (Employee-related) */}
+          <Route path="/daily-operations" element={<DailyOperationsListPage />} />
           <Route path="/daily-operations/add" element={<AddDailyOperationPage />} />
           <Route path="/daily-operations/edit/:id" element={<EditDailyOperationPage />} />
           

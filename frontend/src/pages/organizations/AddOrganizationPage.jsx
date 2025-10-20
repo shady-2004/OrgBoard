@@ -278,12 +278,6 @@ export const AddOrganizationPage = () => {
                       type="date"
                       {...register('qawiSubscriptionDate', {
                         validate: {
-                          notFuture: (value) => {
-                            if (!value) return true;
-                            const selectedDate = new Date(value);
-                            const today = new Date();
-                            return selectedDate <= today || 'التاريخ لا يمكن أن يكون في المستقبل';
-                          },
                           afterBirth: (value) => {
                             if (!value || !birthDate) return true;
                             return new Date(value) >= new Date(birthDate) || 'التاريخ لا يمكن أن يكون قبل تاريخ الميلاد';
@@ -291,7 +285,6 @@ export const AddOrganizationPage = () => {
                         },
                       })}
                       min={getMinDate('qawi')}
-                      max={new Date().toISOString().split('T')[0]}
                       error={errors.qawiSubscriptionDate?.message}
                     />
                   </div>
@@ -305,12 +298,6 @@ export const AddOrganizationPage = () => {
                       type="date"
                       {...register('absherSubscriptionDate', {
                         validate: {
-                          notFuture: (value) => {
-                            if (!value) return true;
-                            const selectedDate = new Date(value);
-                            const today = new Date();
-                            return selectedDate <= today || 'التاريخ لا يمكن أن يكون في المستقبل';
-                          },
                           afterBirth: (value) => {
                             if (!value || !birthDate) return true;
                             return new Date(value) >= new Date(birthDate) || 'التاريخ لا يمكن أن يكون قبل تاريخ الميلاد';
@@ -318,7 +305,6 @@ export const AddOrganizationPage = () => {
                         },
                       })}
                       min={getMinDate('absher')}
-                      max={new Date().toISOString().split('T')[0]}
                       error={errors.absherSubscriptionDate?.message}
                     />
                   </div>

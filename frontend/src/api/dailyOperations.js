@@ -1,8 +1,8 @@
 import api from './axios';
 
 export const dailyOperationsAPI = {
-  getAll: async () => {
-    const { data } = await api.get('/daily-operations');
+  getAll: async (params = {}) => {
+    const { data } = await api.get('/daily-operations', { params });
     return data;
   },
 

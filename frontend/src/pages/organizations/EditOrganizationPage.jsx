@@ -353,7 +353,6 @@ export const EditOrganizationPage = () => {
                       }
                     })}
                     min={getMinDate('qawi')}
-                    max={new Date().toISOString().split('T')[0]}
                     error={errors.qawiSubscriptionDate?.message}
                   />
                 </div>
@@ -375,7 +374,7 @@ export const EditOrganizationPage = () => {
                       }
                     })}
                     min={getMinDate('absher')}
-                    max={new Date().toISOString().split('T')[0]}
+                    error={errors.absherSubscriptionDate?.message}
                     error={errors.absherSubscriptionDate?.message}
                   />
                 </div>
