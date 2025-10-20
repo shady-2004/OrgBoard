@@ -122,7 +122,7 @@ export const DashboardPage = () => {
       value: statsData.dailyOperations || 0, 
       icon: '📝', 
       color: 'bg-amber-500',
-      link: '/organizations' // Navigate to organizations as daily ops are per organization
+      link: '/daily-operations'
     },
   ];
 
