@@ -1,23 +1,39 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Toast } from '../../components/ui/Toast';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Table } from '../../components/tables/Table';
 import { Pagination } from '../../components/tables/Pagination';
 import { dailyOperationsAPI } from '../../api/dailyOperations';
 import { organizationsAPI } from '../../api/organizations';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { formatDate } from '../../utils/formatDate';
+import { useAuth } from '../../hooks/useAuth';
+import { canEdit, canDelete } from '../../utils/permissions';
 
 export const DailyOperationsListPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState('');
   const limit = 10;
+
+  // Toast state
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({ 
+    isOpen: false, 
+    operationId: null, 
+    operationInfo: '' 
+  });
 
   // Fetch daily operations with filters
   const { data, isLoading, error } = useQuery({
@@ -42,6 +58,38 @@ export const DailyOperationsListPage = () => {
   const pagination = data?.data?.pagination || {};
   const organizations = organizationsData?.data?.organizations || [];
 
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => dailyOperationsAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['allDailyOperations']);
+      setConfirmDialog({ isOpen: false, operationId: null, operationInfo: '' });
+      setToast({ visible: true, message: 'تم حذف العملية بنجاح', type: 'success' });
+    },
+    onError: (error) => {
+      setConfirmDialog({ isOpen: false, operationId: null, operationInfo: '' });
+      setToast({ 
+        visible: true, 
+        message: `فشل الحذف: ${error.response?.data?.message || error.message}`, 
+        type: 'error' 
+      });
+    },
+  });
+
+  const handleEdit = (operationId) => {
+    navigate(`/daily-operations/edit/${operationId}`);
+  };
+
+  const handleDelete = (operationId, operationInfo) => {
+    setConfirmDialog({ isOpen: true, operationId, operationInfo });
+  };
+
+  const confirmDelete = () => {
+    if (confirmDialog.operationId) {
+      deleteMutation.mutate(confirmDialog.operationId);
+    }
+  };
+
   // Clear all filters
   const handleClearFilters = () => {
     setSearch('');
@@ -52,6 +100,21 @@ export const DailyOperationsListPage = () => {
   };
 
   const hasActiveFilters = search || startDate || endDate || selectedOrganization;
+
+  // Calculate totals from filtered data (same as office operations)
+  const totals = operations.reduce(
+    (acc, op) => {
+      if (op.category === 'expense') {
+        acc.expenses += op.amount;
+      } else {
+        acc.revenues += op.amount;
+      }
+      acc.net = acc.revenues - acc.expenses;
+      acc.count++;
+      return acc;
+    },
+    { expenses: 0, revenues: 0, net: 0, count: 0 }
+  );
 
   // Payment method helper
   const getPaymentMethodLabel = (method) => {
@@ -125,6 +188,39 @@ export const DailyOperationsListPage = () => {
       key: 'invoice',
       render: (row, value) => value || '-',
     },
+    {
+      label: 'الإجراءات',
+      key: 'actions',
+      render: (row) => (
+        <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
+          {canEdit(user?.role) && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(row._id);
+              }}
+            >
+              تعديل
+            </Button>
+          )}
+          {canDelete(user?.role) && (
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(row._id, `${row.employee?.name || 'موظف'} - ${formatDate(row.date)}`);
+              }}
+              disabled={deleteMutation.isLoading}
+            >
+              {deleteMutation.isLoading ? 'جاري الحذف...' : 'حذف'}
+            </Button>
+          )}
+        </div>
+      ),
+    },
   ];
 
   if (error) {
@@ -141,7 +237,29 @@ export const DailyOperationsListPage = () => {
   }
 
   return (
-    <div>
+    <>
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.visible}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, operationId: null, operationInfo: '' })}
+        onConfirm={confirmDelete}
+        title="تأكيد الحذف"
+        message={`هل أنت متأكد من حذف العملية "${confirmDialog.operationInfo}"؟ هذا الإجراء لا يمكن التراجع عنه.`}
+        confirmText="حذف"
+        cancelText="إلغاء"
+        confirmVariant="danger"
+        isLoading={deleteMutation.isLoading}
+      />
+
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -270,6 +388,55 @@ export const DailyOperationsListPage = () => {
         </div>
       </Card>
 
+      {/* Summary Cards - Only show when there are operations */}
+      {operations.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">إجمالي الإيرادات</p>
+                  <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.revenues)}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">📈</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">إجمالي المصروفات</p>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(totals.expenses)}</p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">📉</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">الصافي</p>
+                  <p className={`text-2xl font-bold ${totals.net >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {formatCurrency(totals.net)}
+                  </p>
+                </div>
+                <div className={`w-12 h-12 ${totals.net >= 0 ? 'bg-blue-100' : 'bg-orange-100'} rounded-full flex items-center justify-center`}>
+                  <span className="text-2xl">💰</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Table */}
       <Card>
         <div className="p-6">
@@ -318,5 +485,6 @@ export const DailyOperationsListPage = () => {
         </div>
       </Card>
     </div>
+    </>
   );
 };

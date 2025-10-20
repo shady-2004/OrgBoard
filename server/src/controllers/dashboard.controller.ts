@@ -250,6 +250,7 @@ export const getDailyOperationsFinancials = catchAsync(
           totalExpenses: {
             $sum: { $cond: [{ $eq: ["$category", "expense"] }, "$amount", 0] },
           },
+          totalOperations: { $sum: 1 },
         },
       },
     ]);
@@ -259,6 +260,7 @@ export const getDailyOperationsFinancials = catchAsync(
       data: {
         totalRevenue: dailyOpsFinancials[0]?.totalRevenue || 0,
         totalExpenses: dailyOpsFinancials[0]?.totalExpenses || 0,
+        totalOperations: dailyOpsFinancials[0]?.totalOperations || 0,
         net: (dailyOpsFinancials[0]?.totalRevenue || 0) - (dailyOpsFinancials[0]?.totalExpenses || 0),
         filters: { month, year }
       },
