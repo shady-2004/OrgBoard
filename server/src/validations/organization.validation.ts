@@ -52,14 +52,14 @@ export const organizationSchemaZod = z
       .transform((val) => (val ? new Date(val) : undefined))
       .optional()
       .refine((date) => !date || !isNaN(date.getTime()), { message: "Invalid Qawi subscription date" })
-      .refine((date) => !date || date <= new Date(), { message: "Qawi subscription date cannot be in the future" }),
+      .refine((date) => !date || date >= new Date(), { message: "Qawi subscription date must be in the future (expiration date)" }),
 
     absherSubscriptionDate: z
       .string()
       .transform((val) => (val ? new Date(val) : undefined))
       .optional()
       .refine((date) => !date || !isNaN(date.getTime()), { message: "Invalid Absher subscription date" })
-      .refine((date) => !date || date <= new Date(), { message: "Absher subscription date cannot be in the future" }),
+      .refine((date) => !date || date >= new Date(), { message: "Absher subscription date must be in the future (expiration date)" }),
 
     commercialRecordDate: z
       .string()
