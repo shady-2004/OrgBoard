@@ -100,18 +100,18 @@ const organizationSchema = new Schema<IOrganization>(
       type: Date,
       validate: {
         validator: function(date: Date) {
-          return !date || date <= new Date();
+          return !date || date >= new Date();
         },
-        message: 'Qawi subscription date cannot be in the future'
+        message: 'Qawi subscription date must be in the future (expiration date)'
       }
     },
     absherSubscriptionDate: { 
       type: Date,
       validate: {
         validator: function(date: Date) {
-          return !date || date <= new Date();
+          return !date || date >= new Date();
         },
-        message: 'Absher subscription date cannot be in the future'
+        message: 'Absher subscription date must be in the future (expiration date)'
       }
     },
     commercialRecordDate: { 
