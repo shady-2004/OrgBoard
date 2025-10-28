@@ -282,6 +282,14 @@ export const AddOrganizationPage = () => {
                             if (!value || !birthDate) return true;
                             return new Date(value) >= new Date(birthDate) || 'التاريخ لا يمكن أن يكون قبل تاريخ الميلاد';
                           },
+                          inFuture: (value) => {
+                            if (!value) return true;
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const selectedDate = new Date(value);
+                            selectedDate.setHours(0, 0, 0, 0);
+                            return selectedDate >= today || 'تاريخ انتهاء اشتراك قوى يجب أن يكون في المستقبل';
+                          },
                         },
                       })}
                       min={getMinDate('qawi')}
@@ -301,6 +309,14 @@ export const AddOrganizationPage = () => {
                           afterBirth: (value) => {
                             if (!value || !birthDate) return true;
                             return new Date(value) >= new Date(birthDate) || 'التاريخ لا يمكن أن يكون قبل تاريخ الميلاد';
+                          },
+                          inFuture: (value) => {
+                            if (!value) return true;
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const selectedDate = new Date(value);
+                            selectedDate.setHours(0, 0, 0, 0);
+                            return selectedDate >= today || 'تاريخ انتهاء اشتراك أبشر يجب أن يكون في المستقبل';
                           },
                         },
                       })}

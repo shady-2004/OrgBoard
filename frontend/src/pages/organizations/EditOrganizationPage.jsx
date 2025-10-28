@@ -349,6 +349,13 @@ export const EditOrganizationPage = () => {
                         if (new Date(value) < new Date(birthDate)) {
                           return 'تاريخ اشتراك قوى يجب أن يكون بعد تاريخ الميلاد';
                         }
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const selectedDate = new Date(value);
+                        selectedDate.setHours(0, 0, 0, 0);
+                        if (selectedDate < today) {
+                          return 'تاريخ انتهاء اشتراك قوى يجب أن يكون في المستقبل';
+                        }
                         return true;
                       }
                     })}
@@ -370,11 +377,17 @@ export const EditOrganizationPage = () => {
                         if (new Date(value) < new Date(birthDate)) {
                           return 'تاريخ اشتراك أبشر يجب أن يكون بعد تاريخ الميلاد';
                         }
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const selectedDate = new Date(value);
+                        selectedDate.setHours(0, 0, 0, 0);
+                        if (selectedDate < today) {
+                          return 'تاريخ انتهاء اشتراك أبشر يجب أن يكون في المستقبل';
+                        }
                         return true;
                       }
                     })}
                     min={getMinDate('absher')}
-                    error={errors.absherSubscriptionDate?.message}
                     error={errors.absherSubscriptionDate?.message}
                   />
                 </div>
