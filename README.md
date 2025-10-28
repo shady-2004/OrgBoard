@@ -118,7 +118,7 @@ The system supports **Arabic (RTL)** and is designed for business accuracy, clar
 - Notes and date-based filtering for clarity  
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/ff0f41c9-de8a-4eb3-8ea6-b6efa343fd23" width="49%" />
+  <img src="https://github.com/user-attachments/assets/637ae98e-34e8-4669-a3ee-f40a6654c152" width="49%" />
   <img src="https://github.com/user-attachments/assets/3732bbc7-d184-44af-97aa-abc070a17399" width="49%" />
 </p>
 
@@ -183,7 +183,7 @@ The system supports **Arabic (RTL)** and is designed for business accuracy, clar
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/4921ed11-911f-437f-8e5c-6923a5726ba9" width="30%" />
-  <img src="https://github.com/user-attachments/assets/ff0f41c9-de8a-4eb3-8ea6-b6efa343fd23" width="30%" />
+  <img src="https://github.com/user-attachments/assets/637ae98e-34e8-4669-a3ee-f40a6654c152" width="30%" />  
   <img src="https://github.com/user-attachments/assets/eff1a9a1-2361-48c5-b546-a72509207aa7" width="30%" />
 </p>
 
