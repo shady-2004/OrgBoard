@@ -36,10 +36,31 @@ const protect = catchAsync(async (req, _res, next) => {
   // 3) Verify token
   const jwtSecret = process.env.JWT_SECRET as string;
   const verifyToken = util.promisify<string, string, any>(jwt.verify);
-  const decoded = (await verifyToken(token, jwtSecret)) as {
-    id: string;
-    iat: number;
-  };
+  
+  let decoded;
+  try {
+    decoded = (await verifyToken(token, jwtSecret)) as {
+      id: string;
+      iat: number;
+    };
+  } catch (error: any) {
+    // Handle JWT expired error
+    if (error.name === 'TokenExpiredError') {
+      return next(
+        new AppError("Your token has expired! Please log in again.", 401)
+      );
+    }
+    // Handle other JWT errors (invalid signature, malformed token, etc.)
+    if (error.name === 'JsonWebTokenError') {
+      return next(
+        new AppError("Invalid token! Please log in again.", 401)
+      );
+    }
+    // Handle any other verification errors
+    return next(
+      new AppError("Authentication failed! Please log in again.", 401)
+    );
+  }
 
   // 4) Check if user still exists
   const currentUser = await User.findById(decoded.id);

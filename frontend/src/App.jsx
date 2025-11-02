@@ -4,6 +4,8 @@ import { AuthProvider } from './hooks/useAuth';
 import { AppRouter } from './routes/AppRouter';
 import './App.css';
 
+console.log = function () {}; // Disable console.log
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
