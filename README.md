@@ -1,7 +1,7 @@
 # 🏢 OrgBoard – Organization Management System
 
 > **Note:** This project was developed as a **freelance project for a Saudi client**.  
-> The following README showcases the system’s design and features, but the **source code cannot be shared** for confidentiality reasons.
+>
 
 ---
 
