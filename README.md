@@ -195,9 +195,5 @@ The system supports **Arabic (RTL)** and is designed for business accuracy, clar
 
 ---
 
-## 📝 License
-
-This project was built as a **private freelance project** for a Saudi client and is **not open-source**.  
-All code and assets remain confidential.
 
 ---
